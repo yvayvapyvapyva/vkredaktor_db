@@ -305,7 +305,7 @@ async function callYcFunction(action, params = {}, bodyData = null) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     
     const options = {
-        method: bodyData !== null ? 'POST' : 'GET',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     };
     

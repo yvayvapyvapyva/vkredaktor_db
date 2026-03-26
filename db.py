@@ -81,7 +81,12 @@ def upsert_route(session, id_param, m_param, json_data):
 def create_response(status_code, body):
     return {
         'statusCode': status_code,
-        'headers': {'Content-Type': 'application/json'},
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        },
         'body': json.dumps(body, ensure_ascii=False)
     }
 
@@ -90,7 +95,19 @@ def create_response(status_code, body):
 def handler(event, context):
     params = event.get('queryStringParameters', {})
     method = event.get('httpMethod')
-    
+
+    # Обработка CORS preflight запроса
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            'body': ''
+        }
+
     # Извлекаем параметры
     action = params.get('action', 'get') # list, get, delete, save
     id_val = params.get('id')

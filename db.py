@@ -23,56 +23,56 @@ pool = ydb.SessionPool(driver)
 def list_user_routes(session, id_param):
     """Получить список всех маршрутов (столбец m) для пользователя"""
     query = """
-        DECLARE $id AS Int64;
-        SELECT m FROM mar WHERE id = $id;
+        DECLARE $id AS Utf8;
+        SELECT m FROM roads WHERE id = $id;
     """
     prepared_query = session.prepare(query)
-    return session.transaction().execute(prepared_query, {'$id': int(id_param)}, commit_tx=True)
+    return session.transaction().execute(prepared_query, {'$id': str(id_param)}, commit_tx=True)
 
 def get_route_details(session, id_param, m_param):
     """Получить JSON конкретного маршрута"""
     query = """
-        DECLARE $id AS Int64;
+        DECLARE $id AS Utf8;
         DECLARE $m AS Utf8;
-        SELECT json FROM mar WHERE id = $id AND m = $m;
+        SELECT json FROM roads WHERE id = $id AND m = $m;
     """
     prepared_query = session.prepare(query)
     return session.transaction().execute(
-        prepared_query, 
-        {'$id': int(id_param), '$m': str(m_param)}, 
+        prepared_query,
+        {'$id': str(id_param), '$m': str(m_param)},
         commit_tx=True
     )
 
 def delete_route(session, id_param, m_param):
     """Удалить конкретный маршрут"""
     query = """
-        DECLARE $id AS Int64;
+        DECLARE $id AS Utf8;
         DECLARE $m AS Utf8;
-        DELETE FROM mar WHERE id = $id AND m = $m;
+        DELETE FROM roads WHERE id = $id AND m = $m;
     """
     prepared_query = session.prepare(query)
     return session.transaction().execute(
-        prepared_query, 
-        {'$id': int(id_param), '$m': str(m_param)}, 
+        prepared_query,
+        {'$id': str(id_param), '$m': str(m_param)},
         commit_tx=True
     )
 
 def upsert_route(session, id_param, m_param, json_data):
     """Создать или перезаписать маршрут (UPSERT)"""
     query = """
-        DECLARE $id AS Int64;
+        DECLARE $id AS Utf8;
         DECLARE $m AS Utf8;
         DECLARE $json AS Utf8;
-        UPSERT INTO mar (id, m, json) VALUES ($id, $m, $json);
+        UPSERT INTO roads (id, m, json) VALUES ($id, $m, $json);
     """
     prepared_query = session.prepare(query)
     return session.transaction().execute(
-        prepared_query, 
+        prepared_query,
         {
-            '$id': int(id_param), 
-            '$m': str(m_param), 
+            '$id': str(id_param),
+            '$m': str(m_param),
             '$json': json.dumps(json_data) if not isinstance(json_data, str) else json_data
-        }, 
+        },
         commit_tx=True
     )
 
@@ -113,6 +113,8 @@ def handler(event, context):
     id_val = params.get('id')
     m_val = params.get('m')
 
+    logger.info(f"Request: action={action}, id={id_val}, m={m_val}")
+
     if not id_val:
         return create_response(400, {'error': 'missing_user_id'})
 
@@ -146,7 +148,7 @@ def handler(event, context):
         # 4. Перезапись/Сохранение (обычно через POST/PUT, но сделаем через action для простоты)
         elif action == 'save':
             if not m_val: return create_response(400, {'error': 'missing_route_name'})
-            
+
             # Данные для записи берем из body (если POST) или из параметров (тестово)
             body_str = event.get('body', '{}')
             try:
@@ -161,7 +163,10 @@ def handler(event, context):
             return create_response(400, {'error': 'unknown_action'})
 
     except ValueError as ve:
-        return create_response(400, {'error': 'invalid_parameter_format'})
+        logger.error(f"ValueError: {str(ve)}")
+        return create_response(400, {'error': 'invalid_parameter_format', 'details': str(ve)})
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        return create_response(500, {'error': 'internal_server_error'})
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return create_response(500, {'error': 'internal_server_error', 'details': str(e)})

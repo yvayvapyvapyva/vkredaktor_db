@@ -74,7 +74,7 @@ def upsert_route(session, id_param, m_param, json_data):
     query = """
         DECLARE $id AS Utf8;
         DECLARE $m AS Utf8;
-        DECLARE $json AS Utf8;
+        DECLARE $json AS Json;
         UPSERT INTO roads (id, m, json) VALUES ($id, $m, $json);
     """
     prepared_query = session.prepare(query)
@@ -109,8 +109,7 @@ def handler(event, context):
     method = event.get('httpMethod')
     body = event.get('body', '')
     
-    logger.info(f"Event: {json.dumps(event, indent=2)}")
-    logger.info(f"Method: {method}, Params: {params}, Body length: {len(body) if body else 0}")
+    logger.info(f"Request: method={method}, action={params.get('action')}, id={params.get('id')}, m={params.get('m')}, body_len={len(body) if body else 0}")
 
     # Обработка CORS preflight запроса
     if method == 'OPTIONS':
@@ -128,8 +127,6 @@ def handler(event, context):
     action = params.get('action', 'get') # list, get, delete, save
     id_val = params.get('id')
     m_val = params.get('m')
-
-    logger.info(f"Request: action={action}, id={id_val}, m={m_val}")
 
     if not id_val:
         return create_response(400, {'error': 'missing_user_id'})

@@ -107,6 +107,10 @@ def create_response(status_code, body):
 def handler(event, context):
     params = event.get('queryStringParameters', {})
     method = event.get('httpMethod')
+    body = event.get('body', '')
+    
+    logger.info(f"Event: {json.dumps(event, indent=2)}")
+    logger.info(f"Method: {method}, Params: {params}, Body length: {len(body) if body else 0}")
 
     # Обработка CORS preflight запроса
     if method == 'OPTIONS':

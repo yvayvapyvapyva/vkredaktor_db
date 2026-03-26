@@ -702,7 +702,7 @@ const deleteActiveRoute = async () => {
 };
 const shareActiveRoute = () => {
     if(!curRoute) return;
-    const link = `https://vk.com/app${USER_ID}#/${curRoute}`;
+    const link = `https://vk.com/app54507759#m=${USER_ID}-${curRoute}`;
     const commandsList = points.sort((a, b) => a.id - b.id).map((p, i) => `${i + 1}. ${p.cmd || 'Без команды'}`).join('\n');
     const textToCopy = `Маршрут: ${curRoute}\n\n${commandsList}\n\n🔗 Ссылка: ${link}`;
     navigator.clipboard.writeText(textToCopy).then(() => { showToast("Список команд и ссылка скопированы", 'success'); }).catch(() => {

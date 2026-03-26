@@ -9,13 +9,25 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Инициализация YDB
+logger.info("Initializing YDB driver...")
+endpoint = os.getenv("YDB_ENDPOINT")
+database = os.getenv("YDB_DATABASE")
+logger.info(f"YDB_ENDPOINT: {endpoint}, YDB_DATABASE: {database}")
+
 driver_config = ydb.DriverConfig(
-    os.getenv("YDB_ENDPOINT"), 
-    os.getenv("YDB_DATABASE"), 
+    endpoint,
+    database,
     credentials=ydb.iam.MetadataUrlCredentials()
 )
 driver = ydb.Driver(driver_config)
-driver.wait(timeout=5)
+
+try:
+    driver.wait(timeout=10)
+    logger.info("YDB driver initialized successfully")
+except Exception as e:
+    logger.error(f"YDB driver initialization failed: {str(e)}")
+    raise
+
 pool = ydb.SessionPool(driver)
 
 # --- YQL Запросы ---
@@ -149,14 +161,25 @@ def handler(event, context):
         elif action == 'save':
             if not m_val: return create_response(400, {'error': 'missing_route_name'})
 
-            # Данные для записи берем из body (если POST) или из параметров (тестово)
+            # Данные для записи берем из body
             body_str = event.get('body', '{}')
+            logger.info(f"Save request body: {body_str}")
+            
             try:
-                new_json = json.loads(body_str)
-            except:
-                return create_response(400, {'error': 'invalid_json_body'})
+                new_json = json.loads(body_str) if body_str else []
+            except Exception as je:
+                logger.error(f"JSON parse error: {str(je)}, body: {body_str}")
+                return create_response(400, {'error': 'invalid_json_body', 'details': str(je)})
 
-            pool.retry_operation_sync(upsert_route, id_param=id_val, m_param=m_val, json_data=new_json)
+            logger.info(f"Saving route: id={id_val}, m={m_val}, data type={type(new_json)}")
+            
+            try:
+                pool.retry_operation_sync(upsert_route, id_param=id_val, m_param=m_val, json_data=new_json)
+                logger.info(f"Route saved successfully")
+            except Exception as se:
+                logger.error(f"YDB save error: {str(se)}")
+                raise
+            
             return create_response(200, {'status': 'saved'})
 
         else:

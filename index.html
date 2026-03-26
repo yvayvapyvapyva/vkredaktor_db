@@ -195,12 +195,34 @@ body {
   }
 
   function getUserIdentity() {
+    // Пробуем получить из URL параметров VK Mini Apps
+    const urlParams = new URLSearchParams(window.location.search);
+    const vkUserIdFromUrl = urlParams.get('vk_user_id');
+    
     const vkUser = getVKUser();
+    
+    // Приоритет: VK из bridge > VK из URL > guest
+    if (vkUser && vkUser.id) {
+      return {
+        id: String(vkUser.id),
+        name: vkUser.first_name + (vkUser.last_name ? " " + vkUser.last_name : ""),
+        username: vkUser.screen_name ? `vk.com/${vkUser.screen_name}` : ""
+      };
+    }
+    
+    if (vkUserIdFromUrl) {
+      return {
+        id: vkUserIdFromUrl,
+        name: "VK User",
+        username: ""
+      };
+    }
+    
     const fallbackId = localStorage.getItem('debug_uid') || ("guest_" + Math.random().toString(36).slice(2, 7));
     return {
-      id: vkUser ? vkUser.id : fallbackId,
-      name: vkUser ? (vkUser.first_name + (vkUser.last_name ? " " + vkUser.last_name : "")) : "Guest",
-      username: vkUser && vkUser.screen_name ? `vk.com/${vkUser.screen_name}` : ""
+      id: fallbackId,
+      name: "Guest",
+      username: ""
     };
   }
 
@@ -278,6 +300,10 @@ const identity = getUserIdentity();
 const USER_ID = identity.id;
 const USER_NAME = identity.name;
 const USER_UNAME = identity.username;
+// Сразу устанавливаем window.USER_ID для использования в callYcFunction
+window.USER_ID = USER_ID;
+window.USER_NAME = USER_NAME;
+window.USER_UNAME = USER_UNAME;
 const COLORS = { Gold: { hex: '#FFD700', label: 'Маневры на перекрестке' }, Blue: { hex: '#007AFF', label: 'Разворот вне перекрестка' }, Red: { hex: '#FF3B30', label: 'Разгон до максимальной скорости' }, Fuchsia: { hex: '#AF52DE', label: 'Остановка и начало движения на подъем' }, Orange: { hex: '#FF9500', label: 'Левые и правые повороты' }, Purple: { hex: '#5856D6', label: 'Параллельная парковка и гараж' }, Cyan: { hex: '#5AC8FA', label: 'Разворот в ограниченном пространстве' }, Brown: { hex: '#A2845E', label: 'Остановка' }, Lime: { hex: '#34C759', label: 'Начало движения' } };
 const COMMAND_SETS = { Gold: ["На перекрестке повернем налево", "На перекрестке едем прямо", "На перекрестке повернем направо", "На перекрестке выполним разворот", "На круговом движении первый съезд", "На круговом движении второй съезд", "На круговом движении третий съезд", "На круговом движении четвертый съезд", "На круговом движении выполним разворот", "На регулируемом перекрестке повернем налево", "На регулируемом перекрестке едем прямо", "На регулируемом перекрестке повернем направо", "На регулируемом перекрестке выполним разворот", "На нерегулируемом перекрестке повернем налево", "На нерегулируемом перекрестке едем прямо", "На нерегулируемом перекрестке повернем направо", "На нерегулируемом перекрестке выполним разворот", "Выполним разворот в ближайшем разрешенном месте"], Blue: ["Выполним разворот вне перекрестка", "Выполним разворот в ближайшем разрешенном месте", "Найдите место для разворота и развернитесь"], Red: ["Выполняем разгон до максимальной скорости", "Набираем максимальную скорость на данном участке дороги", "Разгоняемся до максимальной разрешенной скорости"], Fuchsia: ["По моей команде выполним остановку и начало движения на подъеме", "Выполняем остановку и начало движения на подъеме"], Orange: ["Поворачиваем направо", "Поворачиваем налево", "Далее повернем направо", "Далее повернем налево", "На светофоре повернем направо", "На светофоре повернем налево", "Поворачиваем направо к ленте", "Поворачиваем направо на заправку", "Едем в прямом направлении"], Purple: ["Выполняем параллельную парковку и гараж"], Cyan: ["Выполняем разворот в ограниченном пространстве", "Выполним разворот в ограниченном пространстве с использованием передачи заднего хода"], Brown: ["Выполняем остановку параллельно краю проезжей части", "Выполняем остановку в ближайшем разрешенном месте"], Lime: ["Начинаем движение", "Как будете готовы начинаем движение"] };
 const YC_FUNCTION_URL = 'https://functions.yandexcloud.net/d4ebe5kbgtpmbfv2smig';
@@ -301,7 +327,8 @@ const showToast = (text, type = 'info', duration = 2200) => {
 async function callYcFunction(action, params = {}, bodyData = null) {
     const url = new URL(YC_FUNCTION_URL);
     url.searchParams.set('action', action);
-    url.searchParams.set('id', USER_ID);
+    // Берём актуальный USER_ID из window (может обновиться после загрузки VK)
+    url.searchParams.set('id', window.USER_ID || USER_ID);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     
     const options = {
@@ -415,10 +442,10 @@ vkBridge.send('VKWebAppGetUserInfo').then((data) => {
     window.vkUser = data;
     console.log('VK User:', data);
     // Обновляем данные пользователя после загрузки
-    const identity = getUserIdentity();
-    window.USER_ID = identity.id;
-    window.USER_NAME = identity.name;
-    window.USER_UNAME = identity.username;
+    window.USER_ID = String(data.id);
+    window.USER_NAME = data.first_name + (data.last_name ? " " + data.last_name : "");
+    window.USER_UNAME = data.screen_name ? `vk.com/${data.screen_name}` : "";
+    console.log('Updated window.USER_ID:', window.USER_ID);
 }).catch((err) => {
     console.log('VK User info not available:', err);
 });

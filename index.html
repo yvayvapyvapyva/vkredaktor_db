@@ -324,7 +324,6 @@ async function callYcFunction(action, params = {}, bodyData = null) {
 const getSvg = (col, txt, az, isEnd) => { const s = isEnd ? 34 : 40, c = s/2; return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><g transform="rotate(${az},${c},${c})"><polygon points="${c},2 ${s*0.75},${s-5} ${c},${s*0.65} ${s*0.25},${s-5}" fill="${col}" stroke="#000" stroke-width="1.5"/></g><circle cx="${c}" cy="${c}" r="${isEnd?7:9}" fill="${col}" stroke="#000" stroke-width="1"/><text x="${c}" y="${c+3}" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#000" stroke="#fff" stroke-width="2.5" style="paint-order:stroke fill">${txt}</text></svg>`); };
 const getUserLocSvg = () => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#007AFF" stroke="white" stroke-width="3"/><circle cx="12" cy="12" r="11" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/></svg>`);
 const calcA = (p1, p2) => p1 && p2 ? Math.round((Math.atan2(Math.cos(Math.PI/180*p1[0])*(p2[1]-p1[1]), p2[0]-p1[0])*180/Math.PI+360)%360) : 0;
-const api = async (u, m = 'GET', b = null) => apiRequest(authToken, u, m, b);
 const serializePoints = () => JSON.stringify(points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm })));
 
 function formatJsonWithPts(data) {
@@ -420,7 +419,6 @@ vkBridge.send('VKWebAppGetUserInfo').then((data) => {
     window.USER_ID = identity.id;
     window.USER_NAME = identity.name;
     window.USER_UNAME = identity.username;
-    window.GIST_DESC = `[${identity.id}] VK User: ${identity.name} ${identity.username}`;
 }).catch((err) => {
     console.log('VK User info not available:', err);
 });
@@ -559,20 +557,6 @@ const renderSettingsFileList = () => {
     });
     sel.value = curRoute || "";
 };
-const refreshFileList = async () => {
-    try {
-        const result = await callYcFunction('list');
-        settingsRouteFiles = result.routes || [];
-        renderSettingsFileList();
-        updateVisibility();
-    } catch (e) {
-        console.error('Error loading routes:', e);
-        settingsRouteFiles = [];
-        renderSettingsFileList();
-        updateVisibility();
-        showToast('Ошибка загрузки маршрутов', 'error');
-    }
-};
 
 const updateVisibility = () => {
     const act = curRoute !== null;
@@ -638,33 +622,6 @@ const loadRoute = async (routeName) => {
     } catch (e) {
         console.error('Error loading route:', e);
         showToast('Ошибка загрузки маршрута', 'error');
-    }
-};
-
-const handleCreateNew = async () => {
-    const n = $('newRouteName').value.trim();
-    const routeName = n;
-    if(!n) return;
-    
-    const btn = $('btnCreateFile');
-    btn.disabled = true;
-    btn.textContent = "...";
-    
-    try {
-        await callYcFunction('save', { m: routeName }, []);
-        $('newRouteName').value = '';
-        setTimeout(() => { 
-            refreshFileList(); 
-            loadRoute(routeName); 
-            btn.disabled = false; 
-            btn.textContent = "Создать"; 
-            showToast("Маршрут создан", 'success'); 
-        }, 1000);
-    } catch (e) {
-        console.error('Error creating route:', e);
-        btn.disabled = false;
-        btn.textContent = "Создать";
-        showToast("Ошибка создания", 'error');
     }
 };
 

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Route Editor Pro | Cloud Sync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=YANDEX_API_KEY&lang=ru_RU&suppressMapOpenBlock=true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+:root {
+  --app-bg: #0f1115;
+  --glass-bg: linear-gradient(180deg, rgba(40,40,45,0.44), rgba(28,28,32,0.34));
+  --glass-border: rgba(255,255,255,0.22);
+  --glass-blur: blur(22px);
+  --glass-text: #f3f4f6;
+  --vk-header-height: 44px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--app-bg);
+  color: var(--glass-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+[class*="-copyrights-pane"],
+[class*="-controls-pane"],
+[class*="-map-copyrights-promo"] {
+  display: none !important;
+}
+
+.glass-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--glass-text);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+:root { --btn: #007AFF; --text: #ffffff; --danger: #ff6b6b; --success: #34C759; --border: rgba(255,255,255,0.25); --bg-sec: rgba(10,10,12,0.6); --warn: #ffb84d; --vk-header-height: 44px; --dark-panel: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); --btn-txt: #ffffff; --panel-blur: blur(22px); }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; background: #050505; -webkit-tap-highlight-color: transparent; color: var(--text); }
+        #map { position: absolute; inset: 0; z-index: 1; }
+        [class*="-copyrights-pane"], [class*="-controls-pane"] { display: none !important; }
+        #welcomeScreen { position: fixed; inset: 0; z-index: 5000; background: rgba(10,11,15,0.45); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .welcome-card { background: linear-gradient(180deg, rgba(38,38,44,0.68), rgba(24,24,28,0.58)); width: 100%; max-width: 400px; padding: 32px; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.14); text-align: center; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(20px) saturate(130%); -webkit-backdrop-filter: blur(20px) saturate(130%); }
+        .top-controls { position: absolute; top: calc(env(safe-area-inset-top) + var(--vk-header-height) + 10px); left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; gap: 10px; align-items: center; flex-wrap: nowrap; }
+        .top-right-buttons { display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
+
+        .btn-top { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; padding: 14px 22px; border-radius: 30px; font-weight: 700; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 10px 25px rgba(0,0,0,0.4); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); pointer-events: auto; transition: transform 0.18s, box-shadow 0.18s, background 0.18s; height: 54px; box-sizing: border-box; }
+        .btn-top .btn-icon { font-size: 20px; }
+        .btn-top:active { transform: scale(0.97); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+        .btn-top.btn-icon-only { padding: 14px 16px; width: 54px; justify-content: center; }
+        #listPointsBtn { max-width: calc(100% - 84px); }
+        #routeLabelText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 56vw; display: inline-block; }
+
+        #gpsModeBtn.active {
+            background: rgba(255, 59, 48, 0.85);
+            border-color: rgba(255, 127, 120, 0.8);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 10px 25px rgba(255,59,48,0.3); }
+            50% { box-shadow: 0 10px 35px rgba(255,59,48,0.6); }
+        }
+        .floating-save { position: absolute; top: env(safe-area-inset-top, 0px); left: 50%; transform: translateX(-50%); z-index: 2300; display: none; align-items: center; pointer-events: auto; }
+        .btn-save-glass { background: var(--dark-panel); backdrop-filter: var(--panel-blur); -webkit-backdrop-filter: var(--panel-blur); padding: 10px 20px; border-radius: 100px; border: 1px solid var(--border); color: var(--btn-txt); font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 10px 25px rgba(0,0,0,0.22); text-align: center; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, background 0.18s; width: max-content; max-width: none; }
+        .btn-save-glass:active { transform: scale(0.97); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+
+        .bottom-center-controls { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 2000; display: none; flex-direction: column; align-items: center; width: auto; max-width: 90%; }
+        .btn-add-main { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; padding: 14px 22px; border-radius: 30px; font-weight: 700; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 10px 25px rgba(0,0,0,0.4); cursor: pointer; font-size: 16px; transition: transform 0.18s, box-shadow 0.18s, background 0.18s; width: max-content; white-space: nowrap; height: 54px; box-sizing: border-box; backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); }
+        .btn-add-main:active { transform: scale(0.97); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+        @media (max-width: 430px) {
+            .floating-save { top: calc(env(safe-area-inset-top) + 10px); }
+            .btn-save-glass { font-size: 14px; padding: 14px 18px; }
+            .btn-add-main { font-size: 14px; padding: 14px 18px; }
+        }
+        .modal { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        .modal-content { background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; display: flex; flex-direction: column; max-height: 90vh; animation: slideUp 0.4s cubic-bezier(0.2, 1, 0.3, 1); position: relative; padding-bottom: env(safe-area-inset-bottom); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(24px) saturate(130%); -webkit-backdrop-filter: blur(24px) saturate(130%); }
+        .settings-sheet .modal-content { max-width: 620px; width: min(100vw, 620px); height: min(90vh, 820px); max-height: min(90vh, 820px); border-radius: 26px 26px 0 0; margin-top: calc(env(safe-area-inset-top) + var(--vk-header-height) + 18px); }
+        .settings-header { position: sticky; top: 0; z-index: 5; padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(18,18,22,0.85)); border-bottom: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        .settings-header h3 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+        .settings-header .subtitle { display: none; }
+        .btn-done { background: linear-gradient(180deg, rgba(25,25,30,0.8), rgba(15,15,18,0.7)); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; box-shadow: 0 6px 14px rgba(0,0,0,0.3); cursor: pointer; }
+        .settings-body { padding: 14px 14px 24px; overflow-y: auto; }
+        .settings-section { margin-bottom: 18px; }
+        .settings-note { font-size: 12px; color: #b8bcc7; margin: 8px 4px 0; }
+        .route-search { margin-bottom: 10px; }
+        .route-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .route-item .meta { color: #b8bcc7; font-size: 12px; }
+        .route-item.active .meta { color: #f3f4f6; }
+        .route-item .chevron { color: #cfd3dd; font-size: 18px; }
+        .selected-route-card { padding: 14px 16px; border-radius: 16px; background: linear-gradient(180deg, rgba(25,25,30,0.7), rgba(15,15,18,0.6)); border: 1px solid rgba(255,255,255,0.25); margin-bottom: 10px; }
+        .selected-route-card .name { font-size: 18px; font-weight: 700; }
+        .selected-route-card .sub { color: #b8bcc7; font-size: 13px; margin-top: 4px; }
+        .rename-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+        #renameRouteBtn { padding: 10px 12px; font-size: 13px; border-radius: 12px; white-space: nowrap; width: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .btn-action { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 16px; font-weight: 650; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; width: 100%; box-shadow: 0 12px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.18s, box-shadow 0.18s; }
+        .btn-action:active { transform: scale(0.98); box-shadow: 0 8px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.16); }
+        .btn-action.loading { background: linear-gradient(180deg, rgba(62,62,70,0.66), rgba(42,42,48,0.58)) !important; color: #c7c9d1 !important; pointer-events: none; opacity: 0.8; }
+        .btn-action.saved { background: var(--success) !important; }
+        .editor-section { padding: 0 20px 20px; overflow-y: auto; box-sizing: border-box; }
+        .settings-group { background: linear-gradient(180deg, rgba(25,25,30,0.7), rgba(15,15,18,0.6)); border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.25); overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        .settings-item { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        input, textarea, select { width: 100%; padding: 14px; border: none; font-size: 16px; outline: none; background: transparent; color: #f5f7fa; font-family: inherit; box-sizing: border-box; }
+        .input-wrapper { background: linear-gradient(180deg, rgba(25,25,30,0.7), rgba(15,15,18,0.6)); border-radius: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; padding-right: 8px; box-sizing: border-box; box-shadow: 0 6px 16px rgba(0,0,0,0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        #btnCreateFile { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.25) !important; border-radius: 12px !important; box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2) !important; transition: transform 0.18s, box-shadow 0.18s; }
+        #btnCreateFile:active { transform: scale(0.98); box-shadow: 0 6px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.15) !important; }
+        .gist-list { max-height: 320px; overflow-y: auto; }
+        .gist-item { padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); font-weight: 500; color: #e5e7eb; }
+        .gist-item.active { color: #ffffff; background: rgba(255,255,255,0.12); }
+        .color-dropdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); border-radius: 30px; padding: 12px; display: none; flex-direction: column; gap: 4px; z-index: 6000; box-shadow: 0 30px 100px rgba(0,0,0,0.5); width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .dropdown-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 5999; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+        .color-row { display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 18px; cursor: pointer; }
+        .swatch { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
+        .modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; font-size: 20px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .close-circle { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(180deg, rgba(52,52,58,0.68), rgba(36,36,42,0.58)); border: 1px solid rgba(255,255,255,0.2); color: #f3f4f6; cursor: pointer; box-shadow: 0 6px 14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        #toast { position: fixed; top: calc(env(safe-area-inset-top) + var(--vk-header-height) + 10px); left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; padding: 10px 20px; border-radius: 50px; font-size: 14px; z-index: 9999; transition: 0.4s; opacity: 0; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.25); font-weight: 700; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast.info { background: rgba(0,0,0,0.82); }
+        #toast.success { background: rgba(52,199,89,0.95); }
+        #toast.error { background: rgba(255,59,48,0.95); }
+        #toast.loading { background: rgba(0,122,255,0.95); }
+        .sortable-point-item { background: linear-gradient(180deg, rgba(25,25,30,0.75), rgba(15,15,18,0.65)); padding: 16px; border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.25); position: relative; box-sizing: border-box; width: 100%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .sortable-point-item.active { border-color: rgba(255,255,255,0.32); box-shadow: 0 0 0 2px rgba(255,255,255,0.1); }
+        .sort-handle { position: absolute; top: 12px; right: 12px; color: #d1d1d6; cursor: grab; font-size: 20px; padding: 4px; }
+        .item-main-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-right: 35px; width: 100%; box-sizing: border-box; }
+        .point-number-text { font-size: 18px; font-weight: 800; color: #d1d5db; min-width: 24px; text-align: center; flex-shrink: 0; }
+        .color-indicator-btn { width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0; box-sizing: border-box; }
+        .btn-item-action { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); background: linear-gradient(180deg, rgba(20,20,20,0.7), rgba(10,10,10,0.6)); color: #ffffff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 14px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .item-actions { display: flex; gap: 8px; margin-top: 12px; width: 100%; }
+        .section-title { font-size: 12px; font-weight: 600; color: #c7c9d1; text-transform: uppercase; margin: 0 0 8px 16px; letter-spacing: 0.5px; display: block; }
+        select.cmd-select { background: linear-gradient(180deg, rgba(25,25,30,0.7), rgba(15,15,18,0.6)); border-radius: 12px; padding: 10px 12px; font-weight: 500; appearance: none; white-space: normal; height: auto; line-height: 1.3; overflow: visible; flex-grow: 1; width: 10px; color: #ffffff; border: 1px solid rgba(255,255,255,0.25); }
+        .comm-input { background: linear-gradient(180deg, rgba(25,25,30,0.7), rgba(15,15,18,0.6)); border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; margin-top: 8px; padding: 12px; font-size: 13px; resize: none; width: 100%; display: block; box-sizing: border-box; caret-color: #fff; color: #ffffff; overflow: hidden; min-height: 44px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
+        .settings-route-select { width: 100%; border-radius: 14px; border: 1px solid rgba(255,255,255,0.25); background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; padding: 12px; font-size: 16px; font-weight: 600; }
+        .settings-tools { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+        .settings-tool-btn { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; min-height: 44px; padding: 11px 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; }
+        .settings-tool-btn-danger { background: linear-gradient(180deg, rgba(255, 95, 87, 0.42), rgba(190, 47, 40, 0.36)); border-color: rgba(255, 127, 120, 0.5); }
+        .settings-tool-btn-green { background: linear-gradient(180deg, rgba(52,199,89,0.42), rgba(30,144,63,0.36)); border-color: rgba(103,255,153,0.45); }
+        .settings-tool-btn-wide { border-radius: 14px; font-size: 14px; font-weight: 700; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="toast">Готово</div>
+<div id="welcomeScreen"><div class="welcome-card"><h2 style="margin: 0 0 8px 0; font-weight:800;">Route Editor</h2><div id="userIdBadge" style="background:rgba(255,255,255,0.12);color:#d1d5db;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:18px;border:1px solid rgba(255,255,255,0.2)">Загрузка...</div><div style="font-size:13px; color:#c7c9d1; margin-top:6px; margin-bottom:16px;">Введите GitHub токен для доступа к маршрутам</div><div class="input-wrapper" style="margin-bottom:12px;"><input type="password" id="tokenInput" placeholder="Введите токен (минимум 10 символов)" style="width:100%; padding:14px; border:none; font-size:16px; outline:none; background:transparent; color:#f5f7fa; font-family:inherit; box-sizing:border-box;"></div><button id="saveTokenBtn" class="btn-action" onclick="saveToken()" style="width:100%;">Войти</button></div></div>
+<div id="map"></div>
+<div class="top-controls" id="uiControls" style="display:none">
+    <button id="listPointsBtn" class="btn-top" onclick="openPointsOrderModal()" style="visibility:hidden">
+        <span id="routeLabelText">Маршрут</span>
+    </button>
+    <div class="top-right-buttons">
+        <button class="btn-top btn-icon-only" onclick="openSettingsModal()">
+            <span class="btn-icon">⚙️</span>
+        </button>
+        <button class="btn-top btn-icon-only" id="gpsModeBtn" onclick="toggleGpsMode()" style="display:none;">
+            <span class="btn-icon">🌍</span>
+        </button>
+    </div>
+</div>
+<div class="bottom-center-controls" id="bottomControls">
+    <button id="addMarkerBtn" class="btn-add-main" onclick="handleAddBtnClick()" style="visibility:hidden">
+        <span id="addText">Добавить новую точку</span>
+    </button>
+</div>
+<div id="floatingSave" class="floating-save"><button id="saveStateBtn" class="btn-save-glass" onclick="saveGist()">Сохранить изменения</button></div>
+<div id="dropdownOverlay" class="dropdown-overlay" onclick="closeD()"></div>
+<div id="listColorDropdown" class="color-dropdown"></div>
+
+<div id="pointsOrderModal" class="modal" onclick="if(event.target===this) toggleM('pointsOrderModal')"><div class="modal-content"><div class="modal-header"><h3 id="orderModalTitle">Маршрут</h3><button class="close-circle" onclick="toggleM('pointsOrderModal')">✕</button></div><div class="editor-section" id="pointsSortList"></div><div style="padding: 20px;"><button id="saveInListBtn" class="btn-action" onclick="handleModalSave()"><span id="saveBtnText">Готово</span></button></div></div></div>
+<div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><h3>Настройки</h3></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div class="settings-section"><select id="settingsRouteSelect" class="settings-route-select"><option value="">Выберите маршрут</option></select></div><div class="settings-section"><div class="input-wrapper" style="margin-bottom:8px;"><input type="text" id="newRouteName" placeholder="Название нового маршрута" style="width:100%; padding:14px; border:none; font-size:16px; outline:none; background:transparent; color:#f5f7fa; font-family:inherit; box-sizing:border-box;"></div><button id="btnCreateFile" class="settings-tool-btn settings-tool-btn-green" onclick="handleCreateNew()">➕ Создать новый маршрут</button></div><div id="fileActions" class="settings-section" style="display:none;"><div class="settings-tools"><button class="settings-tool-btn" onclick="renameActiveRoute()">✏️ Переименовать маршрут</button><button class="settings-tool-btn" onclick="shareActiveRoute()">🔗 Скопировать ссылку на маршрут</button><button class="settings-tool-btn settings-tool-btn-danger" onclick="deleteActiveRoute()">🗑️ Удалить маршрут</button><button class="settings-tool-btn settings-tool-btn-green settings-tool-btn-wide" onclick="launchNavigatorWithCurrentRoute()">Открыть в навигаторе</button></div></div></div><div class="settings-section"><div class="settings-tools"><button class="settings-tool-btn settings-tool-btn-danger" onclick="logout()">🚪 Выйти (сбросить токен)</button></div></div></div></div>
+
+<script>
+(function (global) {
+  const byId = (id) => document.getElementById(id);
+  const round6 = (n) => Math.round(n * 1e6) / 1e6;
+
+  function getVKBridge() {
+    return global.vkBridge || null;
+  }
+
+  function getVKUser() {
+    return global.vkUser || null;
+  }
+
+  function getUserIdentity() {
+    const vkUser = getVKUser();
+    const fallbackId = localStorage.getItem('debug_uid') || ("guest_" + Math.random().toString(36).slice(2, 7));
+    return {
+      id: vkUser ? vkUser.id : fallbackId,
+      name: vkUser ? (vkUser.first_name + (vkUser.last_name ? " " + vkUser.last_name : "")) : "Guest",
+      username: vkUser && vkUser.screen_name ? `vk.com/${vkUser.screen_name}` : ""
+    };
+  }
+
+  function getTokenFromUrl() {
+    return localStorage.getItem('github_token') || null;
+  }
+
+  function saveTokenToStorage(token) {
+    localStorage.setItem('github_token', token);
+  }
+
+  function clearTokenFromStorage() {
+    localStorage.removeItem('github_token');
+  }
+
+  function buildInitFileContent(extra = {}) {
+    const vkUser = getVKUser();
+    const fullName = vkUser
+      ? `${vkUser.first_name || ''}${vkUser.last_name ? ` ${vkUser.last_name}` : ''}`.trim()
+      : 'Unknown';
+    const screenName = vkUser && vkUser.screen_name ? vkUser.screen_name : '-';
+    const userId = vkUser && vkUser.id ? String(vkUser.id) : '-';
+    const createdAt = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(new Date());
+    return [
+      `👤 User: ${fullName} (${screenName})`,
+      `🆔 VK ID: ${userId}`,
+      `📱 Platform: VK Mini Apps`,
+      `🕒 Created At (Moscow): ${createdAt}`
+    ].join('\n');
+  }
+
+  async function apiRequest(token, url, method = 'GET', body = null) {
+    if (!token) return null;
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: body ? JSON.stringify(body) : null
+    });
+    if (!res.ok) return null;
+    return res.status === 204 ? true : res.json();
+  }
+
+  global.AppShared = {
+    byId,
+    round6,
+    getVKBridge,
+    getVKUser,
+    getUserIdentity,
+    getTokenFromUrl,
+    saveTokenToStorage,
+    clearTokenFromStorage,
+    buildInitFileContent,
+    apiRequest
+  };
+})(window);
+</script>
+<script>
+const { byId, round6, getVKBridge, getUserIdentity, getTokenFromUrl, saveTokenToStorage, clearTokenFromStorage, buildInitFileContent, apiRequest } = window.AppShared;
+const $ = byId;
+const f6 = round6;
+const vk = getVKBridge();
+const identity = getUserIdentity();
+const USER_ID = identity.id;
+const USER_NAME = identity.name;
+const USER_UNAME = identity.username;
+const GIST_DESC = `[${USER_ID}] VK User: ${USER_NAME} ${USER_UNAME}`;
+const COLORS = { Gold: { hex: '#FFD700', label: 'Маневры на перекрестке' }, Blue: { hex: '#007AFF', label: 'Разворот вне перекрестка' }, Red: { hex: '#FF3B30', label: 'Разгон до максимальной скорости' }, Fuchsia: { hex: '#AF52DE', label: 'Остановка и начало движения на подъем' }, Orange: { hex: '#FF9500', label: 'Левые и правые повороты' }, Purple: { hex: '#5856D6', label: 'Параллельная парковка и гараж' }, Cyan: { hex: '#5AC8FA', label: 'Разворот в ограниченном пространстве' }, Brown: { hex: '#A2845E', label: 'Остановка' }, Lime: { hex: '#34C759', label: 'Начало движения' } };
+const COMMAND_SETS = { Gold: ["На перекрестке повернем налево", "На перекрестке едем прямо", "На перекрестке повернем направо", "На перекрестке выполним разворот", "На круговом движении первый съезд", "На круговом движении второй съезд", "На круговом движении третий съезд", "На круговом движении четвертый съезд", "На круговом движении выполним разворот", "На регулируемом перекрестке повернем налево", "На регулируемом перекрестке едем прямо", "На регулируемом перекрестке повернем направо", "На регулируемом перекрестке выполним разворот", "На нерегулируемом перекрестке повернем налево", "На нерегулируемом перекрестке едем прямо", "На нерегулируемом перекрестке повернем направо", "На нерегулируемом перекрестке выполним разворот", "Выполним разворот в ближайшем разрешенном месте"], Blue: ["Выполним разворот вне перекрестка", "Выполним разворот в ближайшем разрешенном месте", "Найдите место для разворота и развернитесь"], Red: ["Выполняем разгон до максимальной скорости", "Набираем максимальную скорость на данном участке дороги", "Разгоняемся до максимальной разрешенной скорости"], Fuchsia: ["По моей команде выполним остановку и начало движения на подъеме", "Выполняем остановку и начало движения на подъеме"], Orange: ["Поворачиваем направо", "Поворачиваем налево", "Далее повернем направо", "Далее повернем налево", "На светофоре повернем направо", "На светофоре повернем налево", "Поворачиваем направо к ленте", "Поворачиваем направо на заправку", "Едем в прямом направлении"], Purple: ["Выполняем параллельную парковку и гараж"], Cyan: ["Выполняем разворот в ограниченном пространстве", "Выполним разворот в ограниченном пространстве с использованием передачи заднего хода"], Brown: ["Выполняем остановку параллельно краю проезжей части", "Выполняем остановку в ближайшем разрешенном месте"], Lime: ["Начинаем движение", "Как будете готовы начинаем движение"] };
+let map, points = [], cur = null, isAdd = false, isDrawing = false, curFile = null, userGistId = null, activeListPoint = null, modalMode = 'list', tempNewPointData = null, userLocPlacemark = null, activePoint = null, authToken = getTokenFromUrl() || "", settingsRouteFiles = [];
+let historyStack = [], historyIndex = -1, lastSavedSnapshot = "[]", toastTimer = null;
+let lastGpsPoint = null;
+let gpsRecordingPoint = null;
+const GPS_MIN_DISTANCE = 5;
+
+const showToast = (text, type = 'info', duration = 2200) => {
+    const el = $('toast');
+    el.textContent = text;
+    el.className = '';
+    el.classList.add(type || 'info');
+    if (toastTimer) clearTimeout(toastTimer);
+    el.classList.add('show');
+    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+};
+const getSvg = (col, txt, az, isEnd) => { const s = isEnd ? 34 : 40, c = s/2; return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><g transform="rotate(${az},${c},${c})"><polygon points="${c},2 ${s*0.75},${s-5} ${c},${s*0.65} ${s*0.25},${s-5}" fill="${col}" stroke="#000" stroke-width="1.5"/></g><circle cx="${c}" cy="${c}" r="${isEnd?7:9}" fill="${col}" stroke="#000" stroke-width="1"/><text x="${c}" y="${c+3}" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#000" stroke="#fff" stroke-width="2.5" style="paint-order:stroke fill">${txt}</text></svg>`); };
+const getUserLocSvg = () => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#007AFF" stroke="white" stroke-width="3"/><circle cx="12" cy="12" r="11" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/></svg>`);
+const calcA = (p1, p2) => p1 && p2 ? Math.round((Math.atan2(Math.cos(Math.PI/180*p1[0])*(p2[1]-p1[1]), p2[0]-p1[0])*180/Math.PI+360)%360) : 0;
+const api = async (u, m = 'GET', b = null) => apiRequest(authToken, u, m, b);
+const serializePoints = () => JSON.stringify(points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm })));
+
+function formatJsonWithPts(data) {
+    const items = data.map(p => {
+        const ptsStr = JSON.stringify(p.pts);
+        return `  {\n    "id": ${p.id},\n    "color": "${p.color}",\n    "pts": ${ptsStr},\n    "cmd": "${p.cmd.replace(/"/g, '\\"')}",\n    "comm": "${(p.comm || '').replace(/"/g, '\\"')}"\n  }`;
+    });
+    return '[\n' + items.join(',\n') + '\n]';
+}
+const clearRouteObjects = () => {
+    points.forEach(p => { map.geoObjects.remove(p.pm); map.geoObjects.remove(p.line); if (p.pmEnd) map.geoObjects.remove(p.pmEnd); });
+    points = [];
+    activePoint = null;
+};
+const updateHistoryButtons = () => { return; };
+const seedHistory = () => {
+    historyStack = [serializePoints()];
+    historyIndex = 0;
+    updateHistoryButtons();
+};
+const pushHistorySnapshot = () => {
+    const snap = serializePoints();
+    if (historyStack[historyIndex] === snap) return;
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(snap);
+    historyIndex = historyStack.length - 1;
+    updateHistoryButtons();
+};
+const updateSaveState = () => {
+    const hasRoute = curFile !== null;
+    const isDirty = hasRoute && serializePoints() !== lastSavedSnapshot;
+    $('floatingSave').style.display = isDirty ? 'flex' : 'none';
+    const saveBtn = $('saveStateBtn');
+    if (!saveBtn) return;
+    saveBtn.textContent = 'Сохранить изменения';
+    saveBtn.disabled = !isDirty || !hasRoute;
+};
+const syncActiveListCard = () => {
+    document.querySelectorAll('.sortable-point-item').forEach(card => {
+        card.classList.toggle('active', !!activePoint && parseInt(card.dataset.id) === activePoint.id);
+    });
+};
+const setActivePoint = (p, center = false) => {
+    activePoint = p || null;
+    points.forEach(pt => {
+        const active = activePoint && pt === activePoint;
+        pt.line.options.set({ strokeWidth: 3, strokeOpacity: active ? 1 : 0.8 });
+        pt.pm.options.set('zIndex', active ? 1800 : 1000);
+        if (pt.pmEnd) pt.pmEnd.options.set('zIndex', active ? 1600 : 800);
+    });
+    if (center && activePoint?.pts?.length) map.setCenter(activePoint.pts[0]);
+    syncActiveListCard();
+};
+const applySnapshot = (snapshot) => {
+    const data = JSON.parse(snapshot || "[]");
+    clearRouteObjects();
+    data.forEach(d => addP(d.pts[0], d, true));
+    recalculateIds();
+    setActivePoint(null);
+    updateSaveState();
+};
+
+let initialCenter = [56.3399, 43.9332];
+
+function initMapWithGeolocation() {
+    return new Promise((resolve) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    initialCenter = [position.coords.latitude, position.coords.longitude];
+                    resolve(initialCenter);
+                },
+                () => { resolve(initialCenter); },
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+            );
+        } else { resolve(initialCenter); }
+    });
+}
+
+// Инициализация VK Bridge
+vkBridge.send('VKWebAppInit').then(() => {
+    console.log('VK Bridge initialized');
+}).catch((err) => {
+    console.log('VK Bridge init skipped (not in VK):', err);
+});
+
+// Получение данных пользователя VK
+vkBridge.send('VKWebAppGetUserInfo').then((data) => {
+    window.vkUser = data;
+    console.log('VK User:', data);
+    // Обновляем данные пользователя после загрузки
+    const identity = getUserIdentity();
+    window.USER_ID = identity.id;
+    window.USER_NAME = identity.name;
+    window.USER_UNAME = identity.username;
+    window.GIST_DESC = `[${identity.id}] VK User: ${identity.name} ${identity.username}`;
+}).catch((err) => {
+    console.log('VK User info not available:', err);
+});
+
+ymaps.ready(async () => {
+    // Ждём загрузки данных VK (до 2 секунд)
+    for(let i = 0; i < 20 && !window.vkUser; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    const userId = window.USER_ID || USER_ID;
+    $('userIdBadge').textContent = `VK ID: ${userId}`;
+
+    const center = await initMapWithGeolocation();
+    map = new ymaps.Map("map", { center: center, zoom: 17, type: 'yandex#satellite', controls: [] });
+    userLocPlacemark = new ymaps.Placemark([0,0], {}, { iconLayout: 'default#image', iconImageHref: getUserLocSvg(), iconImageSize: [24,24], iconImageOffset: [-12,-12], zIndex: 5000, visible: false });
+    map.geoObjects.add(userLocPlacemark);
+    initGeolocation();
+    map.events.add('click', e => {
+        if(isAdd && tempNewPointData) {
+            const newPoint = addP(e.get('coords'), { ...tempNewPointData });
+            pushHistorySnapshot();
+            updateSaveState();
+            setActivePoint(newPoint, false);
+            startDrawingForPoint(newPoint, true);
+            tempNewPointData = null;
+        }
+    });
+    initColorDropdown('listColorDropdown', (h, n) => {
+        if(activeListPoint) {
+            pushHistorySnapshot();
+            const { point: p, card: c } = activeListPoint; p.color = n; c.querySelector('.color-indicator-btn').style.background = h;
+            const sel = c.querySelector('.cmd-select'); updateCommandOptions(sel, n, ""); p.cmd = sel.value;
+            if (p.line) { p.line.options.set('strokeColor', h); updI(p); if(p.pmEnd) updPI(p); } activeListPoint = null;
+            pushHistorySnapshot();
+            updateSaveState();
+        }
+    });
+    new Sortable($('pointsSortList'), { animation: 150, handle: '.sort-handle', ghostClass: 'sortable-ghost', onEnd: reorderPointsFromList });
+
+    localStorage.removeItem('gh_t_optimized');
+    const settingsRouteSelect = $('settingsRouteSelect');
+    if (settingsRouteSelect) settingsRouteSelect.addEventListener('change', onSettingsRouteSelect);
+    
+    handleInitialAuth();
+});
+
+function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+const initGeolocation = () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(p => {
+            const coords = [p.coords.latitude, p.coords.longitude];
+            if (userLocPlacemark) {
+                userLocPlacemark.geometry.setCoordinates(coords);
+                userLocPlacemark.options.set('visible', true);
+            }
+            if (gpsRecordingPoint) {
+                const currentCoords = p.coords;
+                const dist = getDistanceFromLatLonInM(
+                    lastGpsPoint.lat, lastGpsPoint.lon,
+                    currentCoords.latitude, currentCoords.longitude
+                );
+                if (dist < GPS_MIN_DISTANCE) return;
+                const pts = gpsRecordingPoint.line.geometry.getCoordinates();
+                pts.push(coords);
+                gpsRecordingPoint.line.geometry.setCoordinates(pts);
+                gpsRecordingPoint.pts = pts.map(pt => [f6(pt[0]), f6(pt[1])]);
+                lastGpsPoint = { lat: currentCoords.latitude, lon: currentCoords.longitude };
+                map.setCenter(coords);
+            }
+        }, null, { enableHighAccuracy: true, maximumAge: 5000 });
+    }
+};
+const getRouteFromUrl = () => {
+    const raw = (new URLSearchParams(window.location.search).get('route') || '').trim();
+    if (!raw) return null;
+    const normalized = raw.endsWith('.json') ? raw : `${raw}.json`;
+    return normalized;
+};
+const handleInitialAuth = async () => {
+    const token = authToken || getTokenFromUrl();
+    console.log('handleInitialAuth: token =', token);
+    if (!token || token.length < 10) {
+        console.log('No valid token, showing welcome screen');
+        $('welcomeScreen').style.display = 'flex';
+        $('uiControls').style.display = 'none';
+        $('bottomControls').style.display = 'none';
+        return;
+    }
+    console.log('Token valid, searching for gist...');
+    userGistId = await findUserGist();
+    if(!userGistId) {
+        // Гист не найден - не создаём автоматически, пользователь создаст при создании маршрута
+        console.log('Gist not found, will create on first route creation');
+    }
+    $('welcomeScreen').style.display = 'none';
+    seedHistory();
+    updateSaveState();
+    $('uiControls').style.display = 'flex';
+    $('bottomControls').style.display = 'flex';
+    if(userGistId) {
+        await refreshFileList();
+    }
+    showToast("Вход выполнен", 'success');
+};
+
+window.saveToken = () => {
+    const token = $('tokenInput').value.trim();
+    if (!token || token.length < 10) {
+        showToast("Токен должен содержать минимум 10 символов", 'error');
+        return;
+    }
+    console.log('Saving token to localStorage:', token);
+    saveTokenToStorage(token);
+    authToken = token;
+    $('tokenInput').value = '';
+    console.log('Token saved, auth:', authToken);
+    handleInitialAuth();
+};
+
+window.logout = () => {
+    if (confirm("Вы уверены? Токен будет удалён, и вы вернётесь на экран входа.")) {
+        clearTokenFromStorage();
+        authToken = "";
+        userGistId = null;
+        curFile = null;
+        points = [];
+        clearRouteObjects();
+        $('welcomeScreen').style.display = 'flex';
+        $('uiControls').style.display = 'none';
+        $('bottomControls').style.display = 'none';
+        toggleM('settingsModal');
+        showToast("Выход выполнен", 'success');
+    }
+};
+const findUserGist = async () => {
+    const userId = window.USER_ID || USER_ID;
+    let allGists = [];
+    let page = 1;
+    const perPage = 100;
+    while (true) {
+        const gists = await api(`https://api.github.com/gists?per_page=${perPage}&page=${page}&t=${Date.now()}`);
+        if(!gists || gists.length === 0) break;
+        allGists = allGists.concat(gists);
+        if (gists.length < perPage) break;
+        page++;
+    }
+    if(!allGists) return null;
+    const ex = allGists.find(g => g.description?.includes(`[${userId}]`));
+    return ex ? ex.id : null;
+};
+
+const ensureUserGist = async () => {
+    const userId = window.USER_ID || USER_ID;
+    const gistDesc = window.GIST_DESC || GIST_DESC;
+    if(userGistId) return true;
+    let allGists = [];
+    let page = 1;
+    const perPage = 100;
+    while (true) {
+        const gists = await api(`https://api.github.com/gists?per_page=${perPage}&page=${page}&t=${Date.now()}`);
+        if(!gists || gists.length === 0) break;
+        allGists = allGists.concat(gists);
+        if (gists.length < perPage) break;
+        page++;
+    }
+    if(!allGists) return false;
+    const ex = allGists.find(g => g.description?.includes(`[${userId}]`));
+    if(ex) { userGistId = ex.id; return true; }
+    const cr = await api('https://api.github.com/gists', 'POST', { description: gistDesc, public: true, files: { ".init": { content: buildInitFileContent({ source: 'vk_mini_app' }) } } });
+    if(cr) { userGistId = cr.id; return true; }
+    return false;
+};
+const renderSettingsFileList = () => {
+    const sel = $('settingsRouteSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Выберите маршрут</option>';
+    settingsRouteFiles.forEach(fn => {
+        const op = document.createElement('option');
+        op.value = fn;
+        op.textContent = fn.replace('.json', '');
+        sel.appendChild(op);
+    });
+    sel.value = curFile || "";
+};
+const refreshFileList = async () => {
+    if(!userGistId) {
+        settingsRouteFiles = [];
+        renderSettingsFileList();
+        updateVisibility();
+        return;
+    }
+    const g = await api(`https://api.github.com/gists/${userGistId}?t=${Date.now()}`); if(!g) return;
+    settingsRouteFiles = Object.keys(g.files).filter(fn => fn.endsWith('.json')).sort((a, b) => a.localeCompare(b));
+    renderSettingsFileList();
+    updateVisibility();
+};
+
+const updateVisibility = () => {
+    const act = curFile !== null;
+    $('listPointsBtn').style.visibility = act ? 'visible' : 'hidden';
+    $('addMarkerBtn').style.visibility = act ? 'visible' : 'hidden';
+    $('gpsModeBtn').style.display = act ? 'flex' : 'none';
+    if(curFile) {
+        const n = curFile.replace('.json','');
+        if ($('fileActions')) $('fileActions').style.display = 'block';
+        $('routeLabelText').textContent = n;
+    }
+    else {
+        if ($('fileActions')) $('fileActions').style.display = 'none';
+        $('routeLabelText').textContent = 'Маршрут';
+    }
+    renderSettingsFileList();
+    updateSaveState();
+};
+
+const handleCreateNew = async () => {
+    const n = $('newRouteName').value.trim(), fn = n + '.json', btn = $('btnCreateFile');
+    if(!n) return;
+    const gistOk = await ensureUserGist();
+    if(!gistOk || !userGistId) {
+        btn.disabled = false;
+        btn.textContent = "Создать";
+        showToast("Ошибка подключения к GitHub", 'error');
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = "...";
+    if(await api(`https://api.github.com/gists/${userGistId}`, 'PATCH', { files: { [fn]: { content: "[]" } } })) {
+        $('newRouteName').value = '';
+        setTimeout(() => { refreshFileList(); loadRoute(fn); btn.disabled = false; btn.textContent = "Создать"; showToast("Маршрут создан", 'success'); }, 1000);
+    }
+    else { btn.disabled = false; btn.textContent = "Создать"; showToast("Ошибка создания", 'error'); }
+};
+
+const loadRoute = async (fn) => {
+    const g = await api(`https://api.github.com/gists/${userGistId}?t=${Date.now()}`); if(!g) return;
+    const data = JSON.parse(g.files[fn]?.content || "[]");
+    clearRouteObjects();
+    curFile = fn;
+    data.forEach(d => addP(d.pts[0], d, true));
+    if(points.length) map.setCenter(points[0].pts[0]);
+    recalculateIds();
+    document.querySelectorAll('.gist-item').forEach(it => it.classList.toggle('active', it.textContent.includes(fn.replace('.json',''))));
+    seedHistory();
+    lastSavedSnapshot = serializePoints();
+    updateVisibility();
+    setActivePoint(points[0] || null);
+    showToast(`Загружен: ${fn.replace('.json','')}`, 'success');
+};
+
+const renameActiveRoute = async () => {
+    if (!curFile || !userGistId) { showToast('Выберите маршрут', 'error'); return; }
+    const currentName = curFile.replace('.json', '');
+    const nextNameRaw = prompt('Новое имя маршрута (разрешены: a-z, 0-9, _)', currentName);
+    if (nextNameRaw === null) return;
+    const nextName = nextNameRaw.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    if (!nextName) { showToast('Введите имя маршрута', 'error'); return; }
+    const nextFile = `${nextName}.json`;
+    if (nextFile === curFile) return;
+    const g = await api(`https://api.github.com/gists/${userGistId}?t=${Date.now()}`);
+    if (!g || !g.files[curFile]) { showToast('Ошибка загрузки данных', 'error'); return; }
+    if (g.files[nextFile]) { showToast('Маршрут с таким именем уже есть', 'error'); return; }
+    const content = g.files[curFile].content || "[]";
+    const ok = await api(`https://api.github.com/gists/${userGistId}`, 'PATCH', { files: { [curFile]: null, [nextFile]: { content } } });
+    if (ok) { curFile = nextFile; updateVisibility(); refreshFileList(); showToast('Маршрут переименован', 'success'); }
+    else { showToast('Ошибка переименования', 'error'); }
+};
+
+const deleteActiveRoute = async () => { if(curFile && confirm(`Удалить маршрут ${curFile.replace('.json','')}?`) && await api(`https://api.github.com/gists/${userGistId}`, 'PATCH', { files: { [curFile]: null } })) { clearRouteObjects(); curFile = null; seedHistory(); lastSavedSnapshot = "[]"; refreshFileList(); showToast("Маршрут удален", 'success'); } };
+const shareActiveRoute = () => {
+    if(!curFile) return;
+    const routeName = curFile.replace('.json','');
+    const link = `https://vk.com/app${USER_ID}#/${routeName}`;
+    const commandsList = points.sort((a, b) => a.id - b.id).map((p, i) => `${i + 1}. ${p.cmd || 'Без команды'}`).join('\n');
+    const textToCopy = `Маршрут: ${routeName}\n\n${commandsList}\n\n🔗 Ссылка: ${link}`;
+    navigator.clipboard.writeText(textToCopy).then(() => { showToast("Список команд и ссылка скопированы", 'success'); }).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = textToCopy;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast("Список команд и ссылка скопированы", 'success');
+    });
+};
+const launchNavigatorWithCurrentRoute = () => { if(!curFile) return; const routeName = curFile.replace('.json',''); window.location.href = `index.html?route=${encodeURIComponent(routeName)}`; };
+const openSettingsModal = () => { refreshFileList(); toggleM('settingsModal'); };
+const onSettingsRouteSelect = async (e) => { const fn = e.target.value || ''; if (!fn || fn === curFile) return; await loadRoute(fn); };
+const toggleM = id => { const m = $(id); m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none'; };
+const closeD = () => { document.querySelectorAll('.color-dropdown').forEach(dr => dr.style.display = 'none'); $('dropdownOverlay').style.display = 'none'; };
+const toggleD = id => { const d = $(id), vis = d.style.display === 'flex'; closeD(); if(!vis) { d.style.display = 'flex'; $('dropdownOverlay').style.display = 'block'; } };
+const initColorDropdown = (id, cb) => Object.entries(COLORS).forEach(([n, d]) => { const r = Object.assign(document.createElement('div'), { className: 'color-row', onclick: (e) => { e.stopPropagation(); cb(d.hex, n); closeD(); }, innerHTML: `<div class="swatch" style="background:${d.hex}"></div><div style="font-weight:600;">${d.label}</div>` }); $(id).appendChild(r); });
+const updateCommandOptions = (sel, col, val = "") => { sel.innerHTML = ''; (COMMAND_SETS[col] || ["Без команды"]).forEach(cmd => sel.appendChild(Object.assign(document.createElement('option'), { value: cmd, text: cmd, selected: cmd === val }))); };
+
+function addP(coords, data = null, silent = false) {
+    const p = { id: data?.id || (points.length + 1), color: data?.color || 'Gold', cmd: data?.cmd || '', comm: data?.comm || '', pts: data?.pts || [coords], pm: new ymaps.Placemark(coords, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [40,40], iconImageOffset: [-20,-20], zIndex: 1000 }), line: new ymaps.Polyline(data?.pts || [coords], {}, { strokeWidth: 3, strokeOpacity: 0.8, zIndex: 500 }), pmEnd: null };
+    p.line.options.set('strokeColor', COLORS[p.color].hex);
+    p.pm.geometry.events.add('change', () => { const nc = p.pm.geometry.getCoordinates(), pts = p.line.geometry.getCoordinates(); if(pts.length) { pts[0] = nc; p.line.geometry.setCoordinates(pts); } });
+    p.line.geometry.events.add('change', () => {
+        p.pts = p.line.geometry.getCoordinates().map(pt => [f6(pt[0]), f6(pt[1])]);
+        if(isDrawing && p.pts.length > 1) { $('addText').textContent = "Завершить рисование пути"; }
+        updI(p);
+        if (p.pts.length > 1) updPI(p);
+    });
+    p.pm.events.add('click', () => { setActivePoint(p, true); if(!isAdd && !isDrawing) openEditPointModal(p); });
+    map.geoObjects.add(p.pm);
+    map.geoObjects.add(p.line);
+    points.push(p);
+    updI(p);
+    if (p.pts.length > 1) updPI(p);
+    if (!silent) updateSaveState();
+    return p;
+}
+
+const startDrawingForPoint = (p, isNewPoint = false) => {
+    isAdd = false;
+    isDrawing = true;
+    $('addText').textContent = "Рисуйте путь...";
+    $('addMarkerBtn').classList.remove('active');
+    $('addMarkerBtn').classList.add('drawing');
+    cur = p;
+    setActivePoint(p, !isNewPoint);
+    p.line.editor.startDrawing();
+    p.pm.options.set('draggable', true);
+};
+const stopDrawingMode = () => {
+    if (cur) {
+        cur.pm.options.set('draggable', false);
+        cur.line.editor.stopEditing();
+        pushHistorySnapshot();
+        updateSaveState();
+    }
+    isDrawing = false;
+    $('addText').textContent = "Добавить новую точку";
+    $('addMarkerBtn').classList.remove('drawing');
+    cur = null;
+};
+const handleAddBtnClick = () => {
+    if (gpsRecordingPoint) { stopGpsRecordMode(); }
+    else if (isDrawing) { stopDrawingMode(); }
+    else if (isAdd) { stopAdd(); }
+    else { openCreatePointModal(); }
+};
+
+function toggleGpsMode() {
+    if (gpsRecordingPoint) { stopGpsRecordMode(); }
+    else {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const coords = [position.coords.latitude, position.coords.longitude];
+                gpsRecordingPoint = addP(coords, { id: points.length + 1, color: 'Gold', cmd: 'Выполняем разгон до максимальной скорости', comm: '', pts: [coords] }, false);
+                lastGpsPoint = { lat: coords[0], lon: coords[1] };
+                gpsRecordingPoint.line.editor.startDrawing();
+                gpsRecordingPoint.pm.options.set('draggable', true);
+                $('addText').textContent = 'Завершить запись';
+                $('gpsModeBtn').classList.add('active');
+            },
+            (error) => { console.error('GPS error:', error); },
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+        );
+    }
+}
+
+function stopGpsRecordMode() {
+    if (gpsRecordingPoint) {
+        gpsRecordingPoint.line.editor.stopEditing();
+        gpsRecordingPoint.pm.options.set('draggable', false);
+        gpsRecordingPoint = null;
+    }
+    lastGpsPoint = null;
+    $('gpsModeBtn').classList.remove('active');
+    $('addText').textContent = 'Добавить новую точку';
+    pushHistorySnapshot();
+}
+
+const stopAdd = () => { isAdd = false; tempNewPointData = null; $('addText').textContent = "Добавить новую точку"; $('addMarkerBtn').classList.remove('active'); map.setCursor('grab'); };
+const updI = p => { p.pm.options.set('iconImageHref', getSvg(COLORS[p.color].hex, p.id, (p.pts?.length >= 2 ? calcA(p.pts[0], p.pts[1]) : 0), false)); };
+function updPI(p) { const pts = p.line.geometry.getCoordinates(); if(!pts.length) return; const last = pts[pts.length-1], prev = pts[pts.length-2]; if(!p.pmEnd) { p.pmEnd = new ymaps.Placemark(last, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [34,34], iconImageOffset: [-17,-17], interactive: false, zIndex: 800 }); map.geoObjects.add(p.pmEnd); } else p.pmEnd.geometry.setCoordinates(last); p.pmEnd.options.set({ iconImageHref: getSvg(COLORS[p.color].hex, p.id, prev ? calcA(prev, last) : 0, true) }); }
+
+function recalculateIds() {
+    points.forEach((p, i) => { p.id = i + 1; updI(p); if(p.pmEnd) updPI(p); });
+    const list = $('pointsSortList'); if (list && list.children.length === points.length) Array.from(list.children).forEach((c, i) => { const n = c.querySelector('.point-number-text'); if(n) n.textContent = i + 1; c.dataset.id = i + 1; });
+    syncActiveListCard();
+}
+
+function createPointCard(p, single = false) {
+    const item = document.createElement('div'); item.className = 'sortable-point-item'; item.dataset.id = p.id;
+    item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
+    const sel = item.querySelector('.cmd-select'); updateCommandOptions(sel, p.color, p.cmd);
+    const comm = item.querySelector('.comm-input');
+    const autoHeight = () => { comm.style.height = 'auto'; comm.style.height = comm.scrollHeight + 'px'; };
+    comm.addEventListener('input', () => { p.comm = comm.value; autoHeight(); updateSaveState(); });
+    comm.addEventListener('blur', () => { pushHistorySnapshot(); updateSaveState(); });
+    setTimeout(autoHeight, 0);
+    item.querySelector('.color-indicator-btn').onclick = e => { e.stopPropagation(); activeListPoint = { point: p, card: item }; toggleD('listColorDropdown'); };
+    sel.onchange = () => { p.cmd = sel.value; pushHistorySnapshot(); updateSaveState(); };
+    item.onclick = e => {
+        if (e.target.closest('.btn-item-action') || e.target.closest('.color-indicator-btn') || e.target.closest('.cmd-select') || e.target.closest('.comm-input')) return;
+        setActivePoint(p, true);
+    };
+    item.querySelector('.btn-del').onclick = () => { if(confirm("Удалить точку?")) { pushHistorySnapshot(); delPoint(p); pushHistorySnapshot(); updateSaveState(); if(single) toggleM('pointsOrderModal'); else openPointsOrderModal(); showToast("Точка удалена", 'info'); } };
+    item.querySelector('.btn-path').onclick = () => { toggleM('pointsOrderModal'); startEditPath(p); };
+    return item;
+}
+
+function delPoint(p) {
+    points = points.filter(x => x !== p);
+    map.geoObjects.remove(p.pm);
+    map.geoObjects.remove(p.line);
+    if(p.pmEnd) map.geoObjects.remove(p.pmEnd);
+    if (activePoint === p) activePoint = null;
+    recalculateIds();
+    setActivePoint(points[0] || null);
+}
+function startEditPath(p) {
+    cur = p;
+    isDrawing = true;
+    $('addText').textContent = "Завершить рисование пути";
+    $('addMarkerBtn').classList.add('drawing');
+    p.pm.options.set('draggable', true);
+    p.line.editor.startEditing();
+    setActivePoint(p, true);
+}
+
+function openPointsOrderModal() {
+    modalMode = 'list'; const list = $('pointsSortList'); list.innerHTML = ''; $('orderModalTitle').textContent = curFile ? curFile.replace('.json', '') : "Маршрут"; $('saveInListBtn').style.display = 'none';
+    if (!points.length) list.innerHTML = '<div style="text-align:center;padding:40px;color:#c7c9d1;font-weight:500;">Маршрут пока пуст</div>'; else points.forEach(p => list.appendChild(createPointCard(p)));
+    syncActiveListCard();
+    toggleM('pointsOrderModal');
+}
+
+function openEditPointModal(p) { modalMode = 'edit'; $('pointsSortList').innerHTML = ''; $('orderModalTitle').textContent = `Точка #${p.id}`; $('saveInListBtn').style.display = 'block'; $('saveBtnText').textContent = "Готово"; $('pointsSortList').appendChild(createPointCard(p, true)); syncActiveListCard(); toggleM('pointsOrderModal'); }
+function openCreatePointModal() {
+    modalMode = 'create';
+    $('pointsSortList').innerHTML = '';
+    $('orderModalTitle').textContent = "Новая точка";
+    $('saveInListBtn').style.display = 'block';
+    $('saveBtnText').textContent = "Поставить на карту";
+    tempNewPointData = { id: points.length + 1, color: 'Gold', cmd: COMMAND_SETS.Gold[0], comm: '' };
+    $('pointsSortList').appendChild(createPointCard(tempNewPointData, true));
+    toggleM('pointsOrderModal');
+}
+
+function handleModalSave() {
+    if (modalMode === 'list') saveGist();
+    else if (modalMode === 'edit') toggleM('pointsOrderModal');
+    else if (modalMode === 'create') {
+        toggleM('pointsOrderModal');
+        isAdd = true;
+        $('addMarkerBtn').classList.add('active');
+        $('addText').textContent = "Выберите место на карте";
+        map.setCursor('crosshair');
+    }
+}
+
+function reorderPointsFromList() {
+    pushHistorySnapshot();
+    points = Array.from($('pointsSortList').children).map(c => points.find(p => p.id === parseInt(c.dataset.id))).filter(p => !!p);
+    recalculateIds();
+    pushHistorySnapshot();
+    updateSaveState();
+}
+async function saveGist() {
+    if(!userGistId || !curFile) return;
+    const btn = $('saveInListBtn');
+    const topSaveBtn = $('saveStateBtn');
+    btn.classList.add('loading');
+    if (topSaveBtn) { topSaveBtn.disabled = true; topSaveBtn.textContent = 'Сохраняем...'; }
+    try {
+        const data = points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm }));
+        const formattedJson = formatJsonWithPts(data);
+        const result = await api(`https://api.github.com/gists/${userGistId}`, 'PATCH', { files: { [curFile]: { content: formattedJson } } });
+        if(result) {
+            lastSavedSnapshot = serializePoints();
+            btn.classList.remove('loading');
+            btn.classList.add('saved');
+            if (topSaveBtn) topSaveBtn.textContent = 'Сохранено';
+            setTimeout(() => {
+                btn.classList.remove('saved');
+                if (modalMode === 'list') toggleM('pointsOrderModal');
+                updateSaveState();
+            }, 900);
+        } else {
+            btn.classList.remove('loading');
+            if (topSaveBtn) { topSaveBtn.disabled = false; topSaveBtn.textContent = 'Ошибка, повторить'; }
+            showToast('Ошибка сохранения', 'error');
+        }
+    } catch(e) {
+        btn.classList.remove('loading');
+        if (topSaveBtn) { topSaveBtn.disabled = false; topSaveBtn.textContent = 'Ошибка, повторить'; }
+        showToast('Ошибка: ' + e.message, 'error');
+    }
+}
+
+// Экспорт функций в глобальную область для onclick обработчиков
+window.openPointsOrderModal = openPointsOrderModal;
+window.openSettingsModal = openSettingsModal;
+window.toggleGpsMode = toggleGpsMode;
+window.handleAddBtnClick = handleAddBtnClick;
+window.saveGist = saveGist;
+window.closeD = closeD;
+window.toggleM = toggleM;
+window.handleModalSave = handleModalSave;
+window.renameActiveRoute = renameActiveRoute;
+window.shareActiveRoute = shareActiveRoute;
+window.deleteActiveRoute = deleteActiveRoute;
+window.launchNavigatorWithCurrentRoute = launchNavigatorWithCurrentRoute;
+window.handleCreateNew = handleCreateNew;
+</script>
+</body>
+</html>

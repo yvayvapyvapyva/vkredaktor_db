@@ -692,15 +692,15 @@ const shareActiveRoute = () => {
     if(!curRoute) return;
     const link = `https://vk.com/app54507759#m=${USER_ID}-${curRoute}`;
     const commandsList = points.sort((a, b) => a.id - b.id).map((p, i) => `${i + 1}. ${p.cmd || 'Без команды'}`).join('\n');
-    const textToCopy = `Маршрут: ${curRoute}\n\n${commandsList}\n\n🔗 Ссылка: ${link}`;
-    navigator.clipboard.writeText(textToCopy).then(() => { showToast("Список команд и ссылка скопированы", 'success'); }).catch(() => {
+    const textToCopy = `🔗 Ссылка: ${link}\nНазвание: ${curRoute}\nСписок команд:\n${commandsList}`;
+    navigator.clipboard.writeText(textToCopy).then(() => { showToast("Скопировано", 'success'); }).catch(() => {
         const el = document.createElement('textarea');
         el.value = textToCopy;
         document.body.appendChild(el);
         el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
-        showToast("Список команд и ссылка скопированы", 'success');
+        showToast("Скопировано", 'success');
     });
 };
 const launchNavigatorWithCurrentRoute = () => { if(!curRoute) return; window.location.href = `index.html?route=${encodeURIComponent(curRoute)}`; };

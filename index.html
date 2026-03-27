@@ -703,7 +703,7 @@ const shareActiveRoute = () => {
         showToast("Скопировано", 'success');
     });
 };
-const launchNavigatorWithCurrentRoute = () => { if(!curRoute) return; window.location.href = `index.html?route=${encodeURIComponent(curRoute)}`; };
+const launchNavigatorWithCurrentRoute = () => { if(!curRoute) return; window.location.href = `https://vk.com/app54507759#m=${USER_ID}-${curRoute}`; };
 const openSettingsModal = () => { refreshFileList(); toggleM('settingsModal'); };
 const onSettingsRouteSelect = async (e) => { const val = e.target.value || ''; if (!val || val === curRoute) return; await loadRoute(val); };
 const toggleM = id => { const m = $(id); m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none'; };

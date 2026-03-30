@@ -58,9 +58,9 @@ body {
         .btn-top { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; padding: 14px 22px; border-radius: 30px; font-weight: 700; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 10px 25px rgba(0,0,0,0.4); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); pointer-events: auto; transition: transform 0.18s, box-shadow 0.18s, background 0.18s; height: 54px; box-sizing: border-box; }
         .btn-top .btn-icon { font-size: 20px; }
         .btn-top:active { transform: scale(0.97); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
-        .btn-top.btn-icon-only { padding: 14px 16px; width: 54px; justify-content: center; }
-        #listPointsBtn { max-width: calc(100% - 84px); }
-        #routeLabelText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 56vw; display: inline-block; }
+        .btn-top.btn-icon-only { padding: 14px 16px; width: 54px; height: 54px; justify-content: center; flex-shrink: 0; }
+        #listPointsBtn { max-width: calc(100vw - 100px); overflow: hidden; flex-shrink: 1; min-width: 0; }
+        #routeLabelText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%; }
 
         #gpsModeBtn.active {
             background: rgba(255, 59, 48, 0.85);
@@ -157,9 +157,14 @@ body {
 <div id="welcomeScreen"><div class="welcome-card"><h2 style="margin: 0 0 8px 0; font-weight:800;">Route Editor</h2><div id="userIdBadge" style="background:rgba(255,255,255,0.12);color:#d1d5db;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:18px;border:1px solid rgba(255,255,255,0.2)">Загрузка...</div><div style="font-size:13px; color:#c7c9d1; margin-top:6px; margin-bottom:16px;">Загрузка маршрутов из Yandex Cloud</div><div style="display:flex;align-items:center;justify-content:center;gap:8px;color:#8b8f99;font-size:14px;"><span style="width:16px;height:16px;border:2px solid #8b8f99;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>Подключение...</div></div></div>
 <div id="map"></div>
 <div class="top-controls" id="uiControls" style="display:none">
-    <button id="listPointsBtn" class="btn-top" onclick="openPointsOrderModal()" style="visibility:hidden">
-        <span id="routeLabelText">Маршрут</span>
-    </button>
+    <div style="display:flex;flex-direction:column;gap:8px;pointer-events:auto;">
+        <button id="listPointsBtn" class="btn-top" onclick="openPointsOrderModal()" style="visibility:hidden">
+            <span id="routeLabelText">Маршрут</span>
+        </button>
+        <button id="layerSwitchBtn" class="btn-top btn-icon-only" onclick="toggleLayer()" style="visibility:hidden;width:100%;justify-content:center;">
+            <span class="btn-icon">🗺️</span>
+        </button>
+    </div>
     <div class="top-right-buttons">
         <button class="btn-top btn-icon-only" onclick="openSettingsModal()">
             <span class="btn-icon">⚙️</span>
@@ -414,6 +419,18 @@ const applySnapshot = (snapshot) => {
 };
 
 let initialCenter = [56.3399, 43.9332];
+let currentLayerType = 'yandex#satellite';
+
+function toggleLayer() {
+    if (!map) return;
+    currentLayerType = currentLayerType === 'yandex#satellite' ? 'yandex#map' : 'yandex#satellite';
+    map.setType(currentLayerType);
+    const btn = $('layerSwitchBtn');
+    if (btn) {
+        btn.querySelector('.btn-icon').textContent = currentLayerType === 'yandex#satellite' ? '🗺️' : '🛰️';
+    }
+    showToast(currentLayerType === 'yandex#satellite' ? 'Спутник' : 'Схема', 'info', 1200);
+}
 
 function initMapWithGeolocation() {
     return new Promise((resolve) => {
@@ -576,6 +593,7 @@ const renderSettingsFileList = () => {
 const updateVisibility = () => {
     const act = curRoute !== null;
     $('listPointsBtn').style.visibility = act ? 'visible' : 'hidden';
+    $('layerSwitchBtn').style.visibility = act ? 'visible' : 'hidden';
     $('addMarkerBtn').style.visibility = act ? 'visible' : 'hidden';
     $('gpsModeBtn').style.display = act ? 'flex' : 'none';
     if(curRoute) {
@@ -916,6 +934,7 @@ async function saveGist() {
 window.openPointsOrderModal = openPointsOrderModal;
 window.openSettingsModal = openSettingsModal;
 window.toggleGpsMode = toggleGpsMode;
+window.toggleLayer = toggleLayer;
 window.handleAddBtnClick = handleAddBtnClick;
 window.saveGist = saveGist;
 window.closeD = closeD;

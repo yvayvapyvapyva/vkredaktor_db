@@ -157,11 +157,11 @@ body {
 <div id="welcomeScreen"><div class="welcome-card"><h2 style="margin: 0 0 8px 0; font-weight:800;">Route Editor</h2><div id="userIdBadge" style="background:rgba(255,255,255,0.12);color:#d1d5db;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:18px;border:1px solid rgba(255,255,255,0.2)">Загрузка...</div><div style="font-size:13px; color:#c7c9d1; margin-top:6px; margin-bottom:16px;">Загрузка маршрутов из Yandex Cloud</div><div style="display:flex;align-items:center;justify-content:center;gap:8px;color:#8b8f99;font-size:14px;"><span style="width:16px;height:16px;border:2px solid #8b8f99;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></span>Подключение...</div></div></div>
 <div id="map"></div>
 <div class="top-controls" id="uiControls" style="display:none">
-    <div style="display:flex;flex-direction:column;gap:8px;pointer-events:auto;">
+    <div style="display:flex;flex-direction:column;gap:8px;pointer-events:auto;align-items:flex-start;">
         <button id="listPointsBtn" class="btn-top" onclick="openPointsOrderModal()" style="visibility:hidden">
             <span id="routeLabelText">Маршрут</span>
         </button>
-        <button id="layerSwitchBtn" class="btn-top btn-icon-only" onclick="toggleLayer()" style="visibility:hidden;width:100%;justify-content:center;">
+        <button id="layerSwitchBtn" class="btn-top btn-icon-only" onclick="toggleLayer()" style="visibility:hidden;">
             <span class="btn-icon">🗺️</span>
         </button>
     </div>

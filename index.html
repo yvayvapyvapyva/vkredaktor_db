@@ -184,7 +184,7 @@ body {
 <div id="listColorDropdown" class="color-dropdown"></div>
 
 <div id="pointsOrderModal" class="modal" onclick="if(event.target===this) toggleM('pointsOrderModal')"><div class="modal-content"><div class="modal-header"><h3 id="orderModalTitle">Маршрут</h3><button class="close-circle" onclick="toggleM('pointsOrderModal')">✕</button></div><div class="editor-section" id="pointsSortList"></div><div style="padding: 20px;"><button id="saveInListBtn" class="btn-action" onclick="handleModalSave()"><span id="saveBtnText">Готово</span></button></div></div></div>
-<div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><h3>Настройки</h3></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div class="settings-section"><select id="settingsRouteSelect" class="settings-route-select"><option value="">Выберите маршрут</option></select></div><div class="settings-section"><div class="input-wrapper" style="margin-bottom:8px;"><input type="text" id="newRouteName" placeholder="Название нового маршрута" style="width:100%; padding:14px; border:none; font-size:16px; outline:none; background:transparent; color:#f5f7fa; font-family:inherit; box-sizing:border-box;"></div><button id="btnCreateFile" class="settings-tool-btn settings-tool-btn-green" onclick="handleCreateNew()">➕ Создать новый маршрут</button></div><div id="fileActions" class="settings-section" style="display:none;"><div class="settings-tools"><button class="settings-tool-btn" onclick="renameActiveRoute()">✏️ Переименовать маршрут</button><button class="settings-tool-btn" onclick="shareActiveRoute()">🔗 Скопировать ссылку на маршрут</button><button class="settings-tool-btn settings-tool-btn-danger" onclick="deleteActiveRoute()">🗑️ Удалить маршрут</button><button class="settings-tool-btn settings-tool-btn-green settings-tool-btn-wide" onclick="launchNavigatorWithCurrentRoute()">Открыть в навигаторе</button></div></div></div></div></div>
+<div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><h3>Настройки</h3></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div class="settings-section"><select id="settingsRouteSelect" class="settings-route-select"><option value="">Выберите маршрут</option></select></div><div class="settings-section"><div class="input-wrapper" style="margin-bottom:8px;"><input type="text" id="newRouteName" placeholder="Название нового маршрута" style="width:100%; padding:14px; border:none; font-size:16px; outline:none; background:transparent; color:#f5f7fa; font-family:inherit; box-sizing:border-box;"></div><button id="btnCreateFile" class="settings-tool-btn settings-tool-btn-green" onclick="handleCreateNew()">➕ Создать новый маршрут</button></div><div id="fileActions" class="settings-section" style="display:none;"><div class="settings-tools"><button class="settings-tool-btn" onclick="renameActiveRoute()">✏️ Переименовать маршрут</button><button class="settings-tool-btn" onclick="shareActiveRoute()">🔗 Скопировать ссылку на маршрут</button><button class="settings-tool-btn settings-tool-btn-danger" onclick="deleteActiveRoute()">🗑️ Удалить маршрут</button><button class="settings-tool-btn settings-tool-btn-green settings-tool-btn-wide" onclick="saveRouteLocally()">💾 Сохранить локально</button></div></div></div></div></div>
 
 <script>
 (function (global) {
@@ -722,6 +722,22 @@ const shareActiveRoute = () => {
     });
 };
 const launchNavigatorWithCurrentRoute = () => { if(!curRoute) return; window.location.href = `https://vk.com/app54507759#m=${USER_ID}-${curRoute}`; };
+const saveRouteLocally = () => {
+    if(!curRoute) { showToast('Выберите маршрут', 'error'); return; }
+    const data = points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm }));
+    const jsonStr = formatJsonWithPts(data);
+    const filename = `${window.USER_ID || USER_ID}-${curRoute}.json`;
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Сохранено: ${filename}`, 'success');
+};
 const openSettingsModal = () => { refreshFileList(); toggleM('settingsModal'); };
 const onSettingsRouteSelect = async (e) => { const val = e.target.value || ''; if (!val || val === curRoute) return; await loadRoute(val); };
 const toggleM = id => { const m = $(id); m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none'; };
@@ -944,6 +960,7 @@ window.renameActiveRoute = renameActiveRoute;
 window.shareActiveRoute = shareActiveRoute;
 window.deleteActiveRoute = deleteActiveRoute;
 window.launchNavigatorWithCurrentRoute = launchNavigatorWithCurrentRoute;
+window.saveRouteLocally = saveRouteLocally;
 window.handleCreateNew = handleCreateNew;
 </script>
 </body>

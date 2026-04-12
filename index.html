@@ -118,8 +118,7 @@ body {
         .gist-list { max-height: 320px; overflow-y: auto; }
         .gist-item { padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); font-weight: 500; color: #e5e7eb; }
         .gist-item.active { color: #ffffff; background: rgba(255,255,255,0.12); }
-        .route-list-item { padding: 16px 20px; cursor: pointer; font-size: 16px; font-weight: 600; color: #ffffff; background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(20,20,25,0.85)); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.15s, box-shadow 0.15s; }
-        .route-list-item:active { transform: scale(0.98); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .route-list-item { padding: 0; cursor: pointer; font-size: 16px; font-weight: 600; color: #ffffff; background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(20,20,25,0.85)); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); touch-action: manipulation; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: space-between; }
         .route-list-item.active { color: #ffffff; background: linear-gradient(180deg, rgba(0,122,255,0.4), rgba(0,90,200,0.35)); border-color: rgba(0,122,255,0.6); box-shadow: 0 0 0 2px rgba(0,122,255,0.3); }
         .color-dropdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); border-radius: 30px; padding: 12px; display: none; flex-direction: column; gap: 4px; z-index: 6000; box-shadow: 0 30px 100px rgba(0,0,0,0.5); width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .dropdown-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 5999; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -188,6 +187,7 @@ body {
 <div id="pointsOrderModal" class="modal" onclick="if(event.target===this) toggleM('pointsOrderModal')"><div class="modal-content"><div class="modal-header"><h3 id="orderModalTitle">Маршрут</h3><button class="close-circle" onclick="toggleM('pointsOrderModal')">✕</button></div><div class="editor-section" id="pointsSortList"></div><div style="padding: 20px;"><button id="saveInListBtn" class="btn-action" onclick="handleModalSave()"><span id="saveBtnText">Готово</span></button></div></div></div>
 <div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><span id="settingsTitle">Ваши маршруты</span></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div id="routesList"></div></div><button class="settings-tool-btn settings-tool-btn-green" onclick="openCreateRouteModal()" style="width:100%;flex-shrink:0;">➕ Создать новый маршрут</button></div></div>
 <div id="createRouteModal" class="modal" onclick="if(event.target===this) toggleM('createRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:22px;font-weight:700;text-align:center;">Новый маршрут</h3><div class="input-wrapper" style="margin-bottom:20px;padding:4px;border-radius:14px;"><input type="text" id="newRouteNameInput" placeholder="Название маршрута" style="width:100%;padding:14px;border:none;font-size:17px;outline:none;background:transparent;color:#f5f7fa;font-family:inherit;"></div><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('createRouteModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="handleCreateNew()" style="flex:1;background:linear-gradient(180deg, rgba(52,199,89,0.9), rgba(40,160,70,0.85));padding:16px;font-size:15px;font-weight:600;">Создать</button></div></div></div>
+<div id="settingsRouteModal" class="modal" onclick="if(event.target===this) toggleM('settingsRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Настройки маршрута</h3><div style="display:flex;flex-direction:column;gap:12px;"><button class="btn-action" onclick="renameRouteFromSettings();" style="background:rgba(60,60,70,0.8);">✏️ Переименовать маршрут</button><button class="btn-action" onclick="shareRouteFromSettings();" style="background:rgba(60,60,70,0.8);">🔗 Скопировать ссылку</button><button class="btn-action" onclick="deleteRouteFromSettings();" style="background:rgba(255,80,80,0.8);">🗑️ Удалить маршрут</button><button class="btn-action" onclick="toggleM('settingsRouteModal')" style="background:rgba(80,80,90,0.8);margin-top:8px;">Отмена</button></div></div></div>
 
 <script>
 (function (global) {
@@ -636,11 +636,28 @@ const renderSettingsFileList = () => {
         list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#8b8f99;font-size:15px;">У вас пока нет маршрутов.<br>Создайте первый маршрут.</div>';
     } else {
         settingsRouteFiles.forEach(routeName => {
-            const btn = document.createElement('div');
-            btn.className = 'route-list-item' + (routeName === curRoute ? ' active' : '');
-            btn.textContent = routeName;
-            btn.onclick = () => loadRoute(routeName);
-            list.appendChild(btn);
+            const item = document.createElement('div');
+            item.className = 'route-list-item' + (routeName === curRoute ? ' active' : '');
+            
+            const nameBtn = document.createElement('button');
+            nameBtn.textContent = routeName;
+            nameBtn.style.cssText = 'flex:1;background:transparent;border:none;color:#fff;font-size:16px;font-weight:600;cursor:pointer;padding:14px 8px;margin:0;outline:none;width:100%;text-align:left;height:100%;';
+            nameBtn.onclick = () => {
+                if (nameBtn.textContent === 'Загрузка...') return;
+                nameBtn.textContent = 'Загрузка...';
+                loadRoute(routeName).then(() => {
+                    nameBtn.textContent = routeName;
+                });
+            };
+            
+            const settingsBtn = document.createElement('button');
+            settingsBtn.innerHTML = '⚙️';
+            settingsBtn.style.cssText = 'background:transparent;border:none;font-size:20px;cursor:pointer;padding:8px;margin-right:4px;';
+            settingsBtn.onclick = (e) => { e.stopPropagation(); openRouteSettings(routeName); };
+            
+            item.appendChild(nameBtn);
+            item.appendChild(settingsBtn);
+            list.appendChild(item);
         });
     }
     const userId = window.USER_ID || USER_ID;
@@ -690,6 +707,7 @@ const handleCreateNew = async () => {
 };
 
 const loadRoute = async (routeName) => {
+    showToast("Загрузка...", "info");
     try {
         const result = await callYcFunction('get', { m: routeName });
         if (result.error) {
@@ -765,6 +783,67 @@ const deleteActiveRoute = async () => {
 const shareActiveRoute = () => {
     if(!curRoute) return;
     const link = `https://vk.com/app54507759#m=${USER_ID}-${curRoute}`;
+    navigator.clipboard.writeText(link).then(() => { showToast("Ссылка скопирована", 'success'); }).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = link;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast("Ссылка скопирована", 'success');
+    });
+};
+
+let settingsRouteName = null;
+const openRouteSettings = (routeName) => {
+    settingsRouteName = routeName;
+    toggleM('settingsRouteModal');
+};
+const renameRouteFromSettings = async () => {
+    if (!settingsRouteName) return;
+    const currentName = settingsRouteName;
+    const nextNameRaw = prompt('Новое имя маршрута (разрешены: a-z, 0-9, _)', currentName);
+    if (nextNameRaw === null) return;
+    const nextName = nextNameRaw.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    if (!nextName || nextName === currentName) return;
+    try {
+        const getResult = await callYcFunction('get', { m: currentName });
+        if (getResult.error) { showToast('Ошибка загрузки данных', 'error'); return; }
+        const content = getResult.data || [];
+        await callYcFunction('save', { m: nextName }, content);
+        await callYcFunction('delete', { m: currentName });
+        if (curRoute === currentName) curRoute = nextName;
+        refreshFileList();
+        toggleM('settingsRouteModal');
+        showToast('Маршрут переименован', 'success');
+    } catch (e) {
+        console.error('Error renaming route:', e);
+        showToast('Ошибка переименования', 'error');
+    }
+};
+const deleteRouteFromSettings = async () => {
+    if (!settingsRouteName) return;
+    if (confirm(`Удалить маршрут ${settingsRouteName}?`)) {
+        try {
+            await callYcFunction('delete', { m: settingsRouteName });
+            if (curRoute === settingsRouteName) {
+                clearRouteObjects();
+                curRoute = null;
+                seedHistory();
+                lastSavedSnapshot = "[]";
+            }
+            refreshFileList();
+            toggleM('settingsRouteModal');
+            showToast("Маршрут удален", 'success');
+        } catch (e) {
+            console.error('Error deleting route:', e);
+            showToast('Ошибка удаления', 'error');
+        }
+    }
+};
+const shareRouteFromSettings = () => {
+    if (!settingsRouteName) return;
+    const link = `https://vk.com/app54507759#m=${USER_ID}-${settingsRouteName}`;
     navigator.clipboard.writeText(link).then(() => { showToast("Ссылка скопирована", 'success'); }).catch(() => {
         const el = document.createElement('textarea');
         el.value = link;
@@ -1110,6 +1189,10 @@ window.launchNavigatorWithCurrentRoute = launchNavigatorWithCurrentRoute;
 window.saveRouteLocally = saveRouteLocally;
 window.handleCreateNew = handleCreateNew;
 window.openCreateRouteModal = openCreateRouteModal;
+window.openRouteSettings = openRouteSettings;
+window.renameRouteFromSettings = renameRouteFromSettings;
+window.deleteRouteFromSettings = deleteRouteFromSettings;
+window.shareRouteFromSettings = shareRouteFromSettings;
 </script>
 </body>
 </html>

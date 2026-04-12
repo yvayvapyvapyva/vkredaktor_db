@@ -188,7 +188,10 @@ body {
 <div id="pointsOrderModal" class="modal points-sheet" onclick="if(event.target===this) toggleM('pointsOrderModal')"><div class="modal-content"><div class="modal-header"><h3 id="orderModalTitle">Маршрут</h3><button class="close-circle" onclick="toggleM('pointsOrderModal')">✕</button></div><div class="editor-section" id="pointsSortList"></div><div style="padding: 20px;"><button id="saveInListBtn" class="btn-action" onclick="handleModalSave()"><span id="saveBtnText">Готово</span></button></div></div></div>
 <div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><span id="settingsTitle">Ваши маршруты</span></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div id="routesList"></div></div><button class="settings-tool-btn settings-tool-btn-green" onclick="openCreateRouteModal()" style="width:100%;flex-shrink:0;">➕ Создать новый маршрут</button></div></div>
 <div id="createRouteModal" class="modal" onclick="if(event.target===this) toggleM('createRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:22px;font-weight:700;text-align:center;">Новый маршрут</h3><div class="input-wrapper" style="margin-bottom:20px;padding:4px;border-radius:14px;"><input type="text" id="newRouteNameInput" placeholder="Название маршрута" style="width:100%;padding:14px;border:none;font-size:17px;outline:none;background:transparent;color:#f5f7fa;font-family:inherit;"></div><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('createRouteModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="handleCreateNew()" style="flex:1;background:linear-gradient(180deg, rgba(52,199,89,0.9), rgba(40,160,70,0.85));padding:16px;font-size:15px;font-weight:600;">Создать</button></div></div></div>
-<div id="settingsRouteModal" class="modal" onclick="if(event.target===this) toggleM('settingsRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Настройки маршрута</h3><div style="display:flex;flex-direction:column;gap:12px;"><button class="btn-action" onclick="renameRouteFromSettings();" style="background:rgba(60,60,70,0.8);">✏️ Переименовать маршрут</button><button class="btn-action" onclick="shareRouteFromSettings();" style="background:rgba(60,60,70,0.8);">🔗 Скопировать ссылку</button><button class="btn-action" onclick="deleteRouteFromSettings();" style="background:rgba(255,80,80,0.8);">🗑️ Удалить маршрут</button><button class="btn-action" onclick="toggleM('settingsRouteModal')" style="background:rgba(80,80,90,0.8);margin-top:8px;">Отмена</button></div></div></div>
+<div id="settingsRouteModal" class="modal" onclick="if(event.target===this) toggleM('settingsRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Настройки маршрута</h3><div style="display:flex;flex-direction:column;gap:12px;"><button class="btn-action" onclick="openRenameRouteModal();" style="background:rgba(60,60,70,0.8);">✏️ Переименовать маршрут</button><button class="btn-action" onclick="shareRouteFromSettings();" style="background:rgba(60,60,70,0.8);">🔗 Скопировать ссылку</button><button class="btn-action" onclick="confirmDeleteRoute();" style="background:rgba(255,80,80,0.8);">🗑️ Удалить маршрут</button><button class="btn-action" onclick="toggleM('settingsRouteModal')" style="background:rgba(80,80,90,0.8);margin-top:8px;">Отмена</button></div></div></div>
+<div id="renameRouteModal" class="modal" onclick="if(event.target===this) toggleM('renameRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Переименовать маршрут</h3><div class="input-wrapper" style="margin-bottom:20px;padding:4px;border-radius:14px;"><input type="text" id="renameRouteInput" placeholder="Новое название" style="width:100%;padding:14px;border:none;font-size:17px;outline:none;background:transparent;color:#f5f7fa;font-family:inherit;"></div><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('renameRouteModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="confirmRenameRoute()" style="flex:1;background:linear-gradient(180deg, rgba(52,199,89,0.9), rgba(40,160,70,0.85));padding:16px;font-size:15px;font-weight:600;">Сохранить</button></div></div></div>
+<div id="confirmDeleteModal" class="modal" onclick="if(event.target===this) toggleM('confirmDeleteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Удалить маршрут?</h3><p id="confirmDeleteText" style="margin:0 0 20px;font-size:16px;color:#c7c9d1;text-align:center;"></p><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('confirmDeleteModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="executeDeleteRoute()" style="flex:1;background:rgba(255,80,80,0.8);padding:16px;font-size:15px;font-weight:600;">Удалить</button></div></div></div>
+<div id="confirmDeletePointModal" class="modal" onclick="if(event.target===this) toggleM('confirmDeletePointModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:20px;font-weight:700;text-align:center;">Удалить точку?</h3><p style="margin:0 0 20px;font-size:16px;color:#c7c9d1;text-align:center;">Вы уверены, что хотите удалить эту точку?</p><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('confirmDeletePointModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="executeDeletePoint()" style="flex:1;background:rgba(255,80,80,0.8);padding:16px;font-size:15px;font-weight:600;">Удалить</button></div></div></div>
 
 <script>
 (function (global) {
@@ -319,6 +322,8 @@ let map, points = [], cur = null, isAdd = false, isDrawing = false, curRoute = n
 let historyStack = [], historyIndex = -1, lastSavedSnapshot = "[]", toastTimer = null;
 let lastGpsPoint = null;
 let gpsRecordingPoint = null;
+let pendingDeletePoint = null;
+let pendingDeleteSingle = false;
 const GPS_MIN_DISTANCE = 5;
 
 const showToast = (text, type = 'info', duration = 2200) => {
@@ -769,20 +774,8 @@ const renameActiveRoute = async () => {
 
 const deleteActiveRoute = async () => {
     if (!curRoute) return;
-    if (confirm(`Удалить маршрут ${curRoute}?`)) {
-        try {
-            await callYcFunction('delete', { m: curRoute });
-            clearRouteObjects();
-            curRoute = null;
-            seedHistory();
-            lastSavedSnapshot = "[]";
-            refreshFileList();
-            showToast("Маршрут удален", 'success');
-        } catch (e) {
-            console.error('Error deleting route:', e);
-            showToast('Ошибка удаления', 'error');
-        }
-    }
+    settingsRouteName = curRoute;
+    confirmDeleteRoute();
 };
 const shareActiveRoute = () => {
     if(!curRoute) return;
@@ -803,13 +796,17 @@ const openRouteSettings = (routeName) => {
     settingsRouteName = routeName;
     toggleM('settingsRouteModal');
 };
-const renameRouteFromSettings = async () => {
+const openRenameRouteModal = () => {
     if (!settingsRouteName) return;
+    $('renameRouteInput').value = settingsRouteName;
+    toggleM('settingsRouteModal');
+    setTimeout(() => toggleM('renameRouteModal'), 100);
+};
+const confirmRenameRoute = async () => {
+    const nextName = $('renameRouteInput').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    if (!nextName || nextName === settingsRouteName) { toggleM('renameRouteModal'); return; }
     const currentName = settingsRouteName;
-    const nextNameRaw = prompt('Новое имя маршрута (разрешены: a-z, 0-9, _)', currentName);
-    if (nextNameRaw === null) return;
-    const nextName = nextNameRaw.trim().replace(/[^a-zA-Z0-9_]/g, '');
-    if (!nextName || nextName === currentName) return;
+    toggleM('renameRouteModal');
     try {
         const getResult = await callYcFunction('get', { m: currentName });
         if (getResult.error) { showToast('Ошибка загрузки данных', 'error'); return; }
@@ -818,31 +815,34 @@ const renameRouteFromSettings = async () => {
         await callYcFunction('delete', { m: currentName });
         if (curRoute === currentName) curRoute = nextName;
         refreshFileList();
-        toggleM('settingsRouteModal');
         showToast('Маршрут переименован', 'success');
     } catch (e) {
         console.error('Error renaming route:', e);
         showToast('Ошибка переименования', 'error');
     }
 };
-const deleteRouteFromSettings = async () => {
+const confirmDeleteRoute = () => {
     if (!settingsRouteName) return;
-    if (confirm(`Удалить маршрут ${settingsRouteName}?`)) {
-        try {
-            await callYcFunction('delete', { m: settingsRouteName });
-            if (curRoute === settingsRouteName) {
-                clearRouteObjects();
-                curRoute = null;
-                seedHistory();
-                lastSavedSnapshot = "[]";
-            }
-            refreshFileList();
-            toggleM('settingsRouteModal');
-            showToast("Маршрут удален", 'success');
-        } catch (e) {
-            console.error('Error deleting route:', e);
-            showToast('Ошибка удаления', 'error');
+    $('confirmDeleteText').textContent = `Вы уверены, что хотите удалить маршрут "${settingsRouteName}"?`;
+    toggleM('settingsRouteModal');
+    setTimeout(() => toggleM('confirmDeleteModal'), 100);
+};
+const executeDeleteRoute = async () => {
+    if (!settingsRouteName) return;
+    toggleM('confirmDeleteModal');
+    try {
+        await callYcFunction('delete', { m: settingsRouteName });
+        if (curRoute === settingsRouteName) {
+            clearRouteObjects();
+            curRoute = null;
+            seedHistory();
+            lastSavedSnapshot = "[]";
         }
+        refreshFileList();
+        showToast("Маршрут удален", 'success');
+    } catch (e) {
+        console.error('Error deleting route:', e);
+        showToast('Ошибка удаления', 'error');
     }
 };
 const shareRouteFromSettings = () => {
@@ -1063,10 +1063,35 @@ function recalculateIds() {
     syncActiveListCard();
 }
 
+function confirmDeletePoint(p, isSingle) {
+    pendingDeletePoint = p;
+    pendingDeleteSingle = isSingle;
+    toggleM('pointsOrderModal');
+    setTimeout(() => toggleM('confirmDeletePointModal'), 100);
+}
+async function executeDeletePoint() {
+    if (!pendingDeletePoint) return;
+    const p = pendingDeletePoint;
+    toggleM('confirmDeletePointModal');
+    pushHistorySnapshot();
+    delPoint(p);
+    pushHistorySnapshot();
+    updateSaveState();
+    await saveGist();
+    showToast("Изменения сохранены", "success");
+    if (!pendingDeleteSingle) {
+        openPointsOrderModal();
+    }
+    showToast("Точка удалена", "info");
+    pendingDeletePoint = null;
+}
+
 function createPointCard(p, single = false) {
     const item = document.createElement('div'); item.className = 'sortable-point-item'; item.dataset.id = p.id;
     item.innerHTML = `${!single ? '<div class="sort-handle">☰</div>' : ''}<div class="item-main-row"><div class="point-number-text">${p.id || '?'}</div><div class="color-indicator-btn" style="background:${COLORS[p.color].hex}"></div><select class="cmd-select"></select></div><textarea class="comm-input" placeholder="комментарий">${p.comm || ''}</textarea><div class="item-actions"><button class="btn-item-action btn-path">🖋️ Изменить путь</button><button class="btn-item-action btn-del" style="color:var(--danger)">🗑️ Удалить</button></div>`;
-    const sel = item.querySelector('.cmd-select'); updateCommandOptions(sel, p.color, p.cmd);
+
+const sel = item.querySelector('.cmd-select');
+    updateCommandOptions(sel, p.color, p.cmd);
     const comm = item.querySelector('.comm-input');
     const autoHeight = () => { comm.style.height = 'auto'; comm.style.height = comm.scrollHeight + 'px'; };
     comm.addEventListener('input', () => { p.comm = comm.value; autoHeight(); updateSaveState(); });
@@ -1078,11 +1103,10 @@ function createPointCard(p, single = false) {
         if (e.target.closest('.btn-item-action') || e.target.closest('.color-indicator-btn') || e.target.closest('.cmd-select') || e.target.closest('.comm-input')) return;
         setActivePoint(p, true);
     };
-    item.querySelector('.btn-del').onclick = () => { if(confirm("Удалить точку?")) { pushHistorySnapshot(); delPoint(p); pushHistorySnapshot(); updateSaveState(); if(single) toggleM('pointsOrderModal'); else openPointsOrderModal(); showToast("Точка удалена", 'info'); } };
+    item.querySelector('.btn-del').onclick = () => { confirmDeletePoint(p, single); };
     item.querySelector('.btn-path').onclick = () => { toggleM('pointsOrderModal'); startEditPath(p); };
     return item;
 }
-
 async function delPoint(p) {
     points = points.filter(x => x !== p);
     map.geoObjects.remove(p.pm);
@@ -1198,9 +1222,13 @@ window.saveRouteLocally = saveRouteLocally;
 window.handleCreateNew = handleCreateNew;
 window.openCreateRouteModal = openCreateRouteModal;
 window.openRouteSettings = openRouteSettings;
-window.renameRouteFromSettings = renameRouteFromSettings;
-window.deleteRouteFromSettings = deleteRouteFromSettings;
+window.renameRouteFromSettings = confirmRenameRoute;
+window.deleteRouteFromSettings = executeDeleteRoute;
 window.shareRouteFromSettings = shareRouteFromSettings;
+window.openRenameRouteModal = openRenameRouteModal;
+window.confirmDeleteRoute = confirmDeleteRoute;
+window.confirmDeletePoint = confirmDeletePoint;
+window.executeDeletePoint = executeDeletePoint;
 </script>
 </body>
 </html>

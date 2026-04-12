@@ -527,7 +527,8 @@ ymaps.ready(async () => {
     initGeolocation();
     map.events.add('click', e => {
         if(isAdd && tempNewPointData) {
-            const newPoint = addP(e.get('coords'), { ...tempNewPointData });
+            const snappedCoords = snapToNearestEndMarker(e.get('coords'));
+            const newPoint = addP(snappedCoords, { ...tempNewPointData });
             pushHistorySnapshot();
             updateSaveState();
             setActivePoint(newPoint, false);
@@ -563,6 +564,25 @@ function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+}
+
+function snapToNearestEndMarker(coords) {
+    const SNAP_DISTANCE = 5;
+    let nearestEnd = null;
+    let minDist = Infinity;
+    
+    points.forEach(p => {
+        if (p.pts && p.pts.length >= 2) {
+            const end = p.pts[p.pts.length - 1];
+            const dist = getDistanceFromLatLonInM(coords[0], coords[1], end[0], end[1]);
+            if (dist < minDist && dist <= SNAP_DISTANCE) {
+                minDist = dist;
+                nearestEnd = end;
+            }
+        }
+    });
+    
+    return nearestEnd || coords;
 }
 
 const initGeolocation = () => {

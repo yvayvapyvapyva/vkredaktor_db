@@ -1107,7 +1107,7 @@ function startEditPath(p) {
 }
 
 function openPointsOrderModal() {
-    modalMode = 'list'; const list = $('pointsSortList'); list.innerHTML = ''; $('orderModalTitle').textContent = curRoute || "Маршрут"; $('saveInListBtn').style.display = 'none';
+    modalMode = 'list'; const list = $('pointsSortList'); list.innerHTML = ''; $('orderModalTitle').textContent = curRoute || "Маршрут"; $('saveInListBtn').style.display = 'block'; $('saveBtnText').textContent = "Готово";
     if (!points.length) list.innerHTML = '<div style="text-align:center;padding:40px;color:#c7c9d1;font-weight:500;">Маршрут пока пуст</div>'; else points.forEach(p => list.appendChild(createPointCard(p)));
     syncActiveListCard();
     toggleM('pointsOrderModal');
@@ -1125,8 +1125,12 @@ function openCreatePointModal() {
     toggleM('pointsOrderModal');
 }
 
-function handleModalSave() {
-    if (modalMode === 'list') saveGist();
+async function handleModalSave() {
+    if (modalMode === 'list' || modalMode === 'edit') {
+        await saveGist();
+        showToast("Изменения сохранены", "success");
+    }
+    if (modalMode === 'list') toggleM('pointsOrderModal');
     else if (modalMode === 'edit') toggleM('pointsOrderModal');
     else if (modalMode === 'create') {
         toggleM('pointsOrderModal');

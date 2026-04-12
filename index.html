@@ -697,7 +697,6 @@ const handleCreateNew = async () => {
     if(!n) return;
     
     toggleM('createRouteModal');
-    toggleM('settingsModal');
     
     try {
         await callYcFunction('save', { m: n }, []);

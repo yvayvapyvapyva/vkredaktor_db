@@ -527,8 +527,17 @@ ymaps.ready(async () => {
     initGeolocation();
     map.events.add('click', e => {
         if(isAdd && tempNewPointData) {
-            const snappedCoords = snapToNearestEndMarker(e.get('coords'));
-            const newPoint = addP(snappedCoords, { ...tempNewPointData });
+            const target = e.get('target');
+            let coords = e.get('coords');
+            
+            for (const p of points) {
+                if (p.endPlacemark && target === p.endPlacemark) {
+                    coords = p.endPlacemark.geometry.getCoordinates();
+                    break;
+                }
+            }
+            
+            const newPoint = addP(coords, { ...tempNewPointData });
             pushHistorySnapshot();
             updateSaveState();
             setActivePoint(newPoint, false);
@@ -566,24 +575,6 @@ function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-function snapToNearestEndMarker(coords) {
-    const SNAP_DISTANCE = 5;
-    let nearestEnd = null;
-    let minDist = Infinity;
-    
-    points.forEach(p => {
-        if (p.pts && p.pts.length >= 2) {
-            const end = p.pts[p.pts.length - 1];
-            const dist = getDistanceFromLatLonInM(coords[0], coords[1], end[0], end[1]);
-            if (dist < minDist && dist <= SNAP_DISTANCE) {
-                minDist = dist;
-                nearestEnd = end;
-            }
-        }
-    });
-    
-    return nearestEnd || coords;
-}
 
 const initGeolocation = () => {
     if (navigator.geolocation) {
@@ -939,6 +930,18 @@ const updI = p => {
         
         if (!p.endPlacemark) {
             p.endPlacemark = new ymaps.Placemark([0, 0], {}, { iconLayout: 'default#image', iconImageSize: [30,30], iconImageOffset: [-15,-15], zIndex: 950 });
+            p.endPlacemark.events.add('click', (e) => {
+                if (isAdd && tempNewPointData) {
+                    e.stopPropagation();
+                    const coords = p.endPlacemark.geometry.getCoordinates();
+                    const newPoint = addP(coords, { ...tempNewPointData });
+                    pushHistorySnapshot();
+                    updateSaveState();
+                    setActivePoint(newPoint, false);
+                    startDrawingForPoint(newPoint, true);
+                    tempNewPointData = null;
+                }
+            });
             map.geoObjects.add(p.endPlacemark);
         }
         const last = p.pts[p.pts.length - 1];

@@ -352,10 +352,15 @@ const showToast = (text, type = 'info', duration = 2200) => {
 };
 
 // Вызов Yandex Cloud Function
+// Получаем все VK-параметры из URL страницы (передаются VK при запуске Mini App)
+const VK_PARAMS = new URLSearchParams(window.location.search);
+
 async function callYcFunction(action, params = {}, bodyData = null) {
     const url = new URL(YC_FUNCTION_URL);
     url.searchParams.set('action', action);
-    // Берём актуальный USER_ID из window (может обновиться после загрузки VK)
+    // Передаём все VK-параметры для проверки подписи (sign, vk_user_id, vk_app_id, vk_ts и т.д.)
+    VK_PARAMS.forEach((v, k) => url.searchParams.set(k, v));
+    // Наш параметр id берём из window.USER_ID
     url.searchParams.set('id', window.USER_ID || USER_ID);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     

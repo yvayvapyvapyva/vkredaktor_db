@@ -29,7 +29,9 @@ pool = ydb.SessionPool(driver)
 def verify_vk_signature(params):
     """
     Проверяет криптографическую подпись VK Mini Apps.
-    Возвращает verified viewer_id или None если подпись невалидна.
+    VK передаёт параметры с префиксом vk_ (vk_user_id, vk_app_id, vk_ts и т.д.)
+    + параметр sign.
+    Возвращает verified vk_user_id или None если подпись невалидна.
     """
     if not VK_APP_SECRET:
         return None  # Секрет не настроен — отказываем в доступе
@@ -38,13 +40,12 @@ def verify_vk_signature(params):
     if not sign:
         return None
 
-    # Убираем 'sign' из параметров для проверки
-    sorted_params = sorted(
-        [(k, v) for k, v in params.items() if k != 'sign'],
-        key=lambda x: x[0]
-    )
+    # Берём только VK-параметры (с префиксом vk_) + sign для проверки
+    vk_params = {k: v for k, v in params.items() if k.startswith('vk_') or k == 'sign'}
 
-    # Формируем строку для проверки
+    sign_val = vk_params.pop('sign')
+
+    sorted_params = sorted(vk_params.items(), key=lambda x: x[0])
     data_string = '&'.join(f"{k}={v}" for k, v in sorted_params)
 
     # Вычисляем HMAC-SHA256
@@ -55,10 +56,11 @@ def verify_vk_signature(params):
     ).hexdigest()
 
     # Безопасное сравнение (защита от timing-атак)
-    if not hmac.compare_digest(sign, expected_sign):
+    if not hmac.compare_digest(sign_val, expected_sign):
         return None
 
-    return params.get('viewer_id')
+    # VK передаёт user_id в параметре vk_user_id
+    return vk_params.get('vk_user_id')
 
 # --- YQL Запросы ---
 

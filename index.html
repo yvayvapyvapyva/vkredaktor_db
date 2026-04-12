@@ -808,8 +808,8 @@ function addP(coords, data = null, silent = false) {
         comm: data?.comm || '', 
         pts: ptsData, 
         pm: new ymaps.Placemark(coords, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [40,40], iconImageOffset: [-20,-20], zIndex: 1000 }), 
-        line: new ymaps.Polyline(ptsData, {}, { strokeWidth: 4, strokeOpacity: 1, zIndex: 852 }), 
-        lineOutline: new ymaps.Polyline(ptsData, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 850 }), 
+        line: new ymaps.Polyline(ptsData, {}, { strokeWidth: 4, strokeOpacity: 1, zIndex: 852, interactive: false }), 
+        lineOutline: new ymaps.Polyline(ptsData, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 850, interactive: false }), 
         lineAccent: null, 
         endPlacemark: null 
     };
@@ -905,7 +905,7 @@ function stopGpsRecordMode() {
     pushHistorySnapshot();
 }
 
-const stopAdd = () => { isAdd = false; tempNewPointData = null; $('addText').textContent = "Добавить новую точку"; $('addMarkerBtn').classList.remove('active'); map.setCursor('grab'); };
+const stopAdd = () => { isAdd = false; tempNewPointData = null; $('addText').textContent = "Добавить новую точку"; $('addMarkerBtn').classList.remove('active'); map.setCursor('grab'); points.forEach(p => { if (p.endPlacemark) p.endPlacemark.options.set('interactive', false); }); };
 const updI = p => { 
     const isCurrent = p === activePoint;
     const hasComm = !!p.comm;
@@ -915,7 +915,7 @@ const updI = p => {
     if (p.pts?.length >= 2) {
         if (isCurrent) {
             if (!p.lineAccent) {
-                p.lineAccent = new ymaps.Polyline(p.pts, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 851 });
+                p.lineAccent = new ymaps.Polyline(p.pts, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 851, interactive: false });
                 p.lineAccent.options.set('strokeColor', '#A4E84A');
                 map.geoObjects.add(p.lineAccent);
             } else {
@@ -940,8 +940,12 @@ const updI = p => {
                     setActivePoint(newPoint, false);
                     startDrawingForPoint(newPoint, true);
                     tempNewPointData = null;
+                    points.forEach(pt => { if (pt.endPlacemark) pt.endPlacemark.options.set('interactive', false); });
+                } else {
+                    e.stopPropagation();
                 }
             });
+            p.endPlacemark.options.set('interactive', false);
             map.geoObjects.add(p.endPlacemark);
         }
         const last = p.pts[p.pts.length - 1];
@@ -1031,6 +1035,7 @@ function handleModalSave() {
     else if (modalMode === 'create') {
         toggleM('pointsOrderModal');
         isAdd = true;
+        points.forEach(p => { if (p.endPlacemark) p.endPlacemark.options.set('interactive', true); });
         $('addMarkerBtn').classList.add('active');
         $('addText').textContent = "Выберите место на карте";
         map.setCursor('crosshair');

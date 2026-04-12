@@ -427,13 +427,7 @@ const pushHistorySnapshot = () => {
     updateHistoryButtons();
 };
 const updateSaveState = () => {
-    const hasRoute = curRoute !== null;
-    const isDirty = hasRoute && serializePoints() !== lastSavedSnapshot;
-    $('floatingSave').style.display = isDirty ? 'flex' : 'none';
-    const saveBtn = $('saveStateBtn');
-    if (!saveBtn) return;
-    saveBtn.textContent = 'Сохранить изменения';
-    saveBtn.disabled = !isDirty || !hasRoute;
+    $('floatingSave').style.display = 'none';
 };
 const syncActiveListCard = () => {
     document.querySelectorAll('.sortable-point-item').forEach(card => {
@@ -860,7 +854,7 @@ const startDrawingForPoint = (p, isNewPoint = false) => {
     p.line.editor.startDrawing();
     p.pm.options.set('draggable', true);
 };
-const stopDrawingMode = () => {
+const stopDrawingMode = async () => {
     if (cur) {
         cur.pm.options.set('draggable', false);
         cur.line.editor.stopEditing();
@@ -871,6 +865,8 @@ const stopDrawingMode = () => {
     $('addText').textContent = "Добавить новую точку";
     $('addMarkerBtn').classList.remove('drawing');
     cur = null;
+    await saveGist();
+    showToast("Изменения сохранены", "success");
 };
 const handleAddBtnClick = () => {
     if (gpsRecordingPoint) { stopGpsRecordMode(); }
@@ -899,7 +895,7 @@ function toggleGpsMode() {
     }
 }
 
-function stopGpsRecordMode() {
+async function stopGpsRecordMode() {
     if (gpsRecordingPoint) {
         gpsRecordingPoint.line.editor.stopEditing();
         gpsRecordingPoint.pm.options.set('draggable', false);
@@ -909,6 +905,8 @@ function stopGpsRecordMode() {
     $('gpsModeBtn').classList.remove('active');
     $('addText').textContent = 'Добавить новую точку';
     pushHistorySnapshot();
+    await saveGist();
+    showToast("Изменения сохранены", "success");
 }
 
 const stopAdd = () => { isAdd = false; tempNewPointData = null; $('addText').textContent = "Добавить новую точку"; $('addMarkerBtn').classList.remove('active'); map.setCursor('grab'); points.forEach(p => { if (p.endPlacemark) p.endPlacemark.options.set('interactive', false); }); };
@@ -995,7 +993,7 @@ function createPointCard(p, single = false) {
     return item;
 }
 
-function delPoint(p) {
+async function delPoint(p) {
     points = points.filter(x => x !== p);
     map.geoObjects.remove(p.pm);
     map.geoObjects.remove(p.line);
@@ -1005,6 +1003,8 @@ function delPoint(p) {
     if (activePoint === p) activePoint = null;
     recalculateIds();
     setActivePoint(points[0] || null);
+    await saveGist();
+    showToast("Изменения сохранены", "success");
 }
 function startEditPath(p) {
     cur = p;

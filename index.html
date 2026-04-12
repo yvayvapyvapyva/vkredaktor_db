@@ -353,9 +353,46 @@ async function callYcFunction(action, params = {}, bodyData = null) {
     
     return await response.json();
 }
-const getSvg = (col, txt, az, isEnd) => { const s = isEnd ? 34 : 40, c = s/2; return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><g transform="rotate(${az},${c},${c})"><polygon points="${c},2 ${s*0.75},${s-5} ${c},${s*0.65} ${s*0.25},${s-5}" fill="${col}" stroke="#000" stroke-width="1.5"/></g><circle cx="${c}" cy="${c}" r="${isEnd?7:9}" fill="${col}" stroke="#000" stroke-width="1"/><text x="${c}" y="${c+3}" font-size="10" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#000" stroke="#fff" stroke-width="2.5" style="paint-order:stroke fill">${txt}</text></svg>`); };
+function getNavIconSvg(col, txt, az, isEnd = false, isCurr = false, hasComm = false) {
+    const s = isEnd ? 34 : 40, c = s / 2;
+    const r = isEnd ? 7 : 9;
+    const txtStroke = hasComm ? '#FF3B30' : '#000000';
+    const txtStrokeW = hasComm ? 3 : 2;
+    
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
+        <rect width="${s}" height="${s}" fill="transparent"/>
+        ${isCurr ? `<circle cx="${c}" cy="${c}" r="${r + 3}" fill="none" stroke="#00FF00" stroke-width="2.5" opacity="0.9"/>` : ''}
+        <g transform="rotate(${az},${c},${c})">
+            <polygon points="${c},2 ${c+r},${c} ${c-r},${c}" fill="${col}" stroke="#000000" stroke-width="1" opacity="0.9"/>
+        </g>
+        <circle cx="${c}" cy="${c}" r="${r}" fill="rgba(0,0,0,0.7)"/>
+        <circle cx="${c}" cy="${c}" r="${r}" fill="${col}" opacity="0.3"/>
+        <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${col}" stroke-width="1.5"/>
+        <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+        <text x="${c}" y="${c + 0.5}" font-size="${isEnd ? 8 : 9}" font-family="Arial" font-weight="900" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="${txtStroke}" stroke-width="${txtStrokeW}" paint-order="stroke fill">${txt}</text>
+    </svg>`;
+    
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+function getArrowEndSvg(col, az) {
+    const s = 30, c = s / 2;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">
+        <g transform="rotate(${az},${c},${c})">
+            <polygon points="${c},3 ${c+6},${c+6} ${c},${c+1} ${c-6},${c+6}" fill="${col}" stroke="#000000" stroke-width="1" opacity="0.9"/>
+        </g>
+    </svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
 const getUserLocSvg = () => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#007AFF" stroke="white" stroke-width="3"/><circle cx="12" cy="12" r="11" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/></svg>`);
-const calcA = (p1, p2) => p1 && p2 ? Math.round((Math.atan2(Math.cos(Math.PI/180*p1[0])*(p2[1]-p1[1]), p2[0]-p1[0])*180/Math.PI+360)%360) : 0;
+function calcAzimuth(p1, p2) {
+    if (!p1 || !p2) return 0;
+    const [la1, lo1] = p1.map(v => v * Math.PI / 180);
+    const [la2, lo2] = p2.map(v => v * Math.PI / 180);
+    const y = Math.sin(lo2 - lo1) * Math.cos(la2);
+    const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(lo2 - lo1);
+    return Math.round((Math.atan2(y, x) * 180 / Math.PI + 360) % 360);
+}
 const serializePoints = () => JSON.stringify(points.map(p => ({ id: p.id, color: p.color, pts: p.pts, cmd: p.cmd, comm: p.comm })));
 
 function formatJsonWithPts(data) {
@@ -366,7 +403,13 @@ function formatJsonWithPts(data) {
     return '[\n' + items.join(',\n') + '\n]';
 }
 const clearRouteObjects = () => {
-    points.forEach(p => { map.geoObjects.remove(p.pm); map.geoObjects.remove(p.line); if (p.pmEnd) map.geoObjects.remove(p.pmEnd); });
+    points.forEach(p => { 
+        map.geoObjects.remove(p.pm); 
+        map.geoObjects.remove(p.line); 
+        map.geoObjects.remove(p.lineOutline); 
+        if (p.lineAccent) map.geoObjects.remove(p.lineAccent);
+        if (p.endPlacemark) map.geoObjects.remove(p.endPlacemark);
+    });
     points = [];
     activePoint = null;
 };
@@ -402,9 +445,11 @@ const setActivePoint = (p, center = false) => {
     activePoint = p || null;
     points.forEach(pt => {
         const active = activePoint && pt === activePoint;
-        pt.line.options.set({ strokeWidth: 3, strokeOpacity: active ? 1 : 0.8 });
+        pt.line.options.set({ strokeOpacity: active ? 1 : 0.8 });
+        pt.lineOutline.options.set({ strokeWidth: active ? 8 : 6 });
         pt.pm.options.set('zIndex', active ? 1800 : 1000);
-        if (pt.pmEnd) pt.pmEnd.options.set('zIndex', active ? 1600 : 800);
+        if (pt.endPlacemark) pt.endPlacemark.options.set('zIndex', active ? 1600 : 800);
+        updI(pt);
     });
     if (center && activePoint?.pts?.length) map.setCenter(activePoint.pts[0]);
     syncActiveListCard();
@@ -496,7 +541,7 @@ ymaps.ready(async () => {
             pushHistorySnapshot();
             const { point: p, card: c } = activeListPoint; p.color = n; c.querySelector('.color-indicator-btn').style.background = h;
             const sel = c.querySelector('.cmd-select'); updateCommandOptions(sel, n, ""); p.cmd = sel.value;
-            if (p.line) { p.line.options.set('strokeColor', h); updI(p); if(p.pmEnd) updPI(p); } activeListPoint = null;
+            if (p.line) { p.line.options.set('strokeColor', h); p.lineOutline.options.set('strokeColor', '#000000'); updI(p); } activeListPoint = null;
             pushHistorySnapshot();
             updateSaveState();
         }
@@ -745,21 +790,45 @@ const initColorDropdown = (id, cb) => Object.entries(COLORS).forEach(([n, d]) =>
 const updateCommandOptions = (sel, col, val = "") => { sel.innerHTML = ''; (COMMAND_SETS[col] || ["Без команды"]).forEach(cmd => sel.appendChild(Object.assign(document.createElement('option'), { value: cmd, text: cmd, selected: cmd === val }))); };
 
 function addP(coords, data = null, silent = false) {
-    const p = { id: data?.id || (points.length + 1), color: data?.color || 'Gold', cmd: data?.cmd || '', comm: data?.comm || '', pts: data?.pts || [coords], pm: new ymaps.Placemark(coords, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [40,40], iconImageOffset: [-20,-20], zIndex: 1000 }), line: new ymaps.Polyline(data?.pts || [coords], {}, { strokeWidth: 3, strokeOpacity: 0.8, zIndex: 500 }), pmEnd: null };
+    const ptsData = data?.pts || [coords];
+    const p = { 
+        id: data?.id || (points.length + 1), 
+        color: data?.color || 'Gold', 
+        cmd: data?.cmd || '', 
+        comm: data?.comm || '', 
+        pts: ptsData, 
+        pm: new ymaps.Placemark(coords, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [40,40], iconImageOffset: [-20,-20], zIndex: 1000 }), 
+        line: new ymaps.Polyline(ptsData, {}, { strokeWidth: 4, strokeOpacity: 1, zIndex: 852 }), 
+        lineOutline: new ymaps.Polyline(ptsData, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 850 }), 
+        lineAccent: null, 
+        endPlacemark: null 
+    };
     p.line.options.set('strokeColor', COLORS[p.color].hex);
-    p.pm.geometry.events.add('change', () => { const nc = p.pm.geometry.getCoordinates(), pts = p.line.geometry.getCoordinates(); if(pts.length) { pts[0] = nc; p.line.geometry.setCoordinates(pts); } });
+    p.lineOutline.options.set('strokeColor', '#000000');
+    
+    p.pm.geometry.events.add('change', () => { 
+        const nc = p.pm.geometry.getCoordinates(), pts = p.line.geometry.getCoordinates(); 
+        if(pts.length) { 
+            pts[0] = nc; 
+            p.line.geometry.setCoordinates(pts); 
+            p.lineOutline.geometry.setCoordinates(pts);
+            if(p.lineAccent) p.lineAccent.geometry.setCoordinates(pts);
+        } 
+    });
     p.line.geometry.events.add('change', () => {
-        p.pts = p.line.geometry.getCoordinates().map(pt => [f6(pt[0]), f6(pt[1])]);
+        const coords = p.line.geometry.getCoordinates();
+        p.pts = coords.map(pt => [f6(pt[0]), f6(pt[1])]);
+        p.lineOutline.geometry.setCoordinates(coords);
+        if(p.lineAccent) p.lineAccent.geometry.setCoordinates(coords);
         if(isDrawing && p.pts.length > 1) { $('addText').textContent = "Завершить рисование пути"; }
         updI(p);
-        if (p.pts.length > 1) updPI(p);
     });
     p.pm.events.add('click', () => { setActivePoint(p, true); if(!isAdd && !isDrawing) openEditPointModal(p); });
+    map.geoObjects.add(p.lineOutline);
     map.geoObjects.add(p.pm);
     map.geoObjects.add(p.line);
     points.push(p);
     updI(p);
-    if (p.pts.length > 1) updPI(p);
     if (!silent) updateSaveState();
     return p;
 }
@@ -827,11 +896,49 @@ function stopGpsRecordMode() {
 }
 
 const stopAdd = () => { isAdd = false; tempNewPointData = null; $('addText').textContent = "Добавить новую точку"; $('addMarkerBtn').classList.remove('active'); map.setCursor('grab'); };
-const updI = p => { p.pm.options.set('iconImageHref', getSvg(COLORS[p.color].hex, p.id, (p.pts?.length >= 2 ? calcA(p.pts[0], p.pts[1]) : 0), false)); };
-function updPI(p) { const pts = p.line.geometry.getCoordinates(); if(!pts.length) return; const last = pts[pts.length-1], prev = pts[pts.length-2]; if(!p.pmEnd) { p.pmEnd = new ymaps.Placemark(last, {}, { iconLayout: 'default#imageWithContent', iconImageSize: [34,34], iconImageOffset: [-17,-17], interactive: false, zIndex: 800 }); map.geoObjects.add(p.pmEnd); } else p.pmEnd.geometry.setCoordinates(last); p.pmEnd.options.set({ iconImageHref: getSvg(COLORS[p.color].hex, p.id, prev ? calcA(prev, last) : 0, true) }); }
-
+const updI = p => { 
+    const isCurrent = p === activePoint;
+    const hasComm = !!p.comm;
+    const az = p.pts?.length >= 2 ? calcAzimuth(p.pts[0], p.pts[1]) : 0;
+    p.pm.options.set('iconImageHref', getNavIconSvg(COLORS[p.color].hex, p.id, az, false, isCurrent, hasComm));
+    
+    if (p.pts?.length >= 2) {
+        if (isCurrent) {
+            if (!p.lineAccent) {
+                p.lineAccent = new ymaps.Polyline(p.pts, {}, { strokeWidth: 6, strokeOpacity: 1, zIndex: 851 });
+                p.lineAccent.options.set('strokeColor', '#A4E84A');
+                map.geoObjects.add(p.lineAccent);
+            } else {
+                p.lineAccent.geometry.setCoordinates(p.pts);
+            }
+        } else {
+            if (p.lineAccent) {
+                map.geoObjects.remove(p.lineAccent);
+                p.lineAccent = null;
+            }
+        }
+        
+        if (!p.endPlacemark) {
+            p.endPlacemark = new ymaps.Placemark([0, 0], {}, { iconLayout: 'default#image', iconImageSize: [30,30], iconImageOffset: [-15,-15], zIndex: 950 });
+            map.geoObjects.add(p.endPlacemark);
+        }
+        const last = p.pts[p.pts.length - 1];
+        const prev = p.pts.length >= 2 ? p.pts[p.pts.length - 2] : last;
+        p.endPlacemark.geometry.setCoordinates(last);
+        p.endPlacemark.options.set('iconImageHref', getArrowEndSvg(COLORS[p.color].hex, calcAzimuth(prev, last)));
+    } else {
+        if (p.lineAccent) {
+            map.geoObjects.remove(p.lineAccent);
+            p.lineAccent = null;
+        }
+        if (p.endPlacemark) {
+            map.geoObjects.remove(p.endPlacemark);
+            p.endPlacemark = null;
+        }
+    }
+};
 function recalculateIds() {
-    points.forEach((p, i) => { p.id = i + 1; updI(p); if(p.pmEnd) updPI(p); });
+    points.forEach((p, i) => { p.id = i + 1; updI(p); });
     const list = $('pointsSortList'); if (list && list.children.length === points.length) Array.from(list.children).forEach((c, i) => { const n = c.querySelector('.point-number-text'); if(n) n.textContent = i + 1; c.dataset.id = i + 1; });
     syncActiveListCard();
 }
@@ -860,7 +967,9 @@ function delPoint(p) {
     points = points.filter(x => x !== p);
     map.geoObjects.remove(p.pm);
     map.geoObjects.remove(p.line);
-    if(p.pmEnd) map.geoObjects.remove(p.pmEnd);
+    map.geoObjects.remove(p.lineOutline);
+    if(p.lineAccent) map.geoObjects.remove(p.lineAccent);
+    if(p.endPlacemark) map.geoObjects.remove(p.endPlacemark);
     if (activePoint === p) activePoint = null;
     recalculateIds();
     setActivePoint(points[0] || null);

@@ -1162,7 +1162,6 @@ async function handleModalSave() {
         points.forEach(p => { if (p.endPlacemark) p.endPlacemark.options.set('interactive', true); });
         $('addMarkerBtn').classList.add('active');
         $('addText').textContent = "Выберите место на карте";
-        map.setCursor('crosshair');
     }
 }
 

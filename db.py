@@ -1,4 +1,6 @@
 import os
+import hmac
+import hashlib
 import ydb
 import ydb.iam
 import json
@@ -6,6 +8,7 @@ import json
 # Инициализация YDB
 endpoint = os.getenv("YDB_ENDPOINT")
 database = os.getenv("YDB_DATABASE")
+VK_APP_SECRET = os.getenv("VK_APP_SECRET")
 
 driver_config = ydb.DriverConfig(
     endpoint,
@@ -20,6 +23,42 @@ except Exception as e:
     raise
 
 pool = ydb.SessionPool(driver)
+
+# --- Проверка подписи VK ---
+
+def verify_vk_signature(params):
+    """
+    Проверяет криптографическую подпись VK Mini Apps.
+    Возвращает verified viewer_id или None если подпись невалидна.
+    """
+    if not VK_APP_SECRET:
+        return None  # Секрет не настроен — отказываем в доступе
+
+    sign = params.get('sign')
+    if not sign:
+        return None
+
+    # Убираем 'sign' из параметров для проверки
+    sorted_params = sorted(
+        [(k, v) for k, v in params.items() if k != 'sign'],
+        key=lambda x: x[0]
+    )
+
+    # Формируем строку для проверки
+    data_string = '&'.join(f"{k}={v}" for k, v in sorted_params)
+
+    # Вычисляем HMAC-SHA256
+    expected_sign = hmac.new(
+        VK_APP_SECRET.encode('utf-8'),
+        data_string.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+
+    # Безопасное сравнение (защита от timing-атак)
+    if not hmac.compare_digest(sign, expected_sign):
+        return None
+
+    return params.get('viewer_id')
 
 # --- YQL Запросы ---
 
@@ -150,12 +189,15 @@ def handler(event, context):
         }
 
     # Извлекаем параметры
-    action = params.get('action', 'get') # list, get, delete, save
-    id_val = params.get('id')
+    action = params.get('action', 'get')
     m_val = params.get('m')
 
-    if not id_val:
-        return create_response(400, {'error': 'missing_user_id'})
+    # Проверяем подпись VK и получаем доверенный ID пользователя
+    verified_user_id = verify_vk_signature(params)
+    if not verified_user_id:
+        return create_response(401, {'error': 'invalid_vk_signature', 'message': 'Недействительная подпись VK'})
+
+    id_val = verified_user_id
 
     try:
         # 1. Получение списка маршрутов пользователя

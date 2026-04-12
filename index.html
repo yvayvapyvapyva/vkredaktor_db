@@ -699,7 +699,7 @@ const openCreateRouteModal = () => {
 };
 
 const handleCreateNew = async () => {
-    const n = $('newRouteNameInput').value.trim();
+    const n = $('newRouteNameInput').value.replace(/\s/g, '_');
     if(!n) return;
     
     toggleM('createRouteModal');
@@ -744,9 +744,9 @@ const loadRoute = async (routeName) => {
 const renameActiveRoute = async () => {
     if (!curRoute) { showToast('Выберите маршрут', 'error'); return; }
     const currentName = curRoute;
-    const nextNameRaw = prompt('Новое имя маршрута (разрешены: a-z, 0-9, _)', currentName);
+    const nextNameRaw = prompt('Новое имя маршрута', currentName);
     if (nextNameRaw === null) return;
-    const nextName = nextNameRaw.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    const nextName = nextNameRaw.replace(/\s/g, '_');
     if (!nextName) { showToast('Введите имя маршрута', 'error'); return; }
     if (nextName === curRoute) return;
     
@@ -804,7 +804,7 @@ const openRenameRouteModal = () => {
     setTimeout(() => toggleM('renameRouteModal'), 100);
 };
 const confirmRenameRoute = async () => {
-    const nextName = $('renameRouteInput').value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    const nextName = $('renameRouteInput').value.replace(/\s/g, '_');
     if (!nextName || nextName === settingsRouteName) { toggleM('renameRouteModal'); return; }
     const currentName = settingsRouteName;
     toggleM('renameRouteModal');

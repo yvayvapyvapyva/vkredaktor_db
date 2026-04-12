@@ -1,6 +1,7 @@
 import os
 import hmac
 import hashlib
+import base64
 import ydb
 import ydb.iam
 import json
@@ -29,38 +30,39 @@ pool = ydb.SessionPool(driver)
 def verify_vk_signature(params):
     """
     Проверяет криптографическую подпись VK Mini Apps.
-    VK передаёт параметры с префиксом vk_ (vk_user_id, vk_app_id, vk_ts и т.д.)
-    + параметр sign.
-    Возвращает verified vk_user_id или None если подпись невалидна.
+    Подпись VK — это base64url-закодированный HMAC-SHA256.
+    Возвращает (user_id, error_message).
     """
     if not VK_APP_SECRET:
-        return None  # Секрет не настроен — отказываем в доступе
+        return None, 'VK_APP_SECRET not configured'
 
     sign = params.get('sign')
     if not sign:
-        return None
+        return None, 'sign parameter missing'
 
-    # Берём только VK-параметры (с префиксом vk_) + sign для проверки
-    vk_params = {k: v for k, v in params.items() if k.startswith('vk_') or k == 'sign'}
+    # Берём только VK-параметры (с префиксом vk_)
+    vk_params = {k: v for k, v in params.items() if k.startswith('vk_')}
 
-    sign_val = vk_params.pop('sign')
-
+    sign_val = sign
     sorted_params = sorted(vk_params.items(), key=lambda x: x[0])
     data_string = '&'.join(f"{k}={v}" for k, v in sorted_params)
 
-    # Вычисляем HMAC-SHA256
-    expected_sign = hmac.new(
+    # HMAC-SHA256, закодированный в base64url (без padding)
+    mac = hmac.new(
         VK_APP_SECRET.encode('utf-8'),
         data_string.encode('utf-8'),
         hashlib.sha256
-    ).hexdigest()
+    ).digest()
 
-    # Безопасное сравнение (защита от timing-атак)
-    if not hmac.compare_digest(sign_val, expected_sign):
-        return None
+    expected_b64url = base64.urlsafe_b64encode(mac).decode('utf-8').rstrip('=')
 
-    # VK передаёт user_id в параметре vk_user_id
-    return vk_params.get('vk_user_id')
+    if not hmac.compare_digest(sign_val, expected_b64url):
+        return None, 'invalid_vk_signature'
+
+    uid = vk_params.get('vk_user_id')
+    if not uid:
+        return None, 'vk_user_id missing'
+    return uid, None
 
 # --- YQL Запросы ---
 
@@ -195,9 +197,9 @@ def handler(event, context):
     m_val = params.get('m')
 
     # Проверяем подпись VK и получаем доверенный ID пользователя
-    verified_user_id = verify_vk_signature(params)
+    verified_user_id, err = verify_vk_signature(params)
     if not verified_user_id:
-        return create_response(401, {'error': 'invalid_vk_signature', 'message': 'Недействительная подпись VK'})
+        return create_response(401, {'error': 'invalid_vk_signature', 'message': err})
 
     id_val = verified_user_id
 

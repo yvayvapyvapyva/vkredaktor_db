@@ -223,9 +223,8 @@ body {
       };
     }
     
-    const fallbackId = localStorage.getItem('debug_uid') || ("guest_" + Math.random().toString(36).slice(2, 7));
     return {
-      id: fallbackId,
+      id: "default",
       name: "Guest",
       username: ""
     };

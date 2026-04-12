@@ -79,6 +79,43 @@ def upsert_route(session, id_param, m_param, json_data):
         commit_tx=True
     )
 
+def update_route_meta(session, id_param, m_param, name, description, visible):
+    """Обновить метаданные маршрута (name, description, visible)"""
+    query = """
+        DECLARE $id AS Utf8;
+        DECLARE $m AS Utf8;
+        DECLARE $name AS Utf8;
+        DECLARE $description AS Utf8;
+        DECLARE $visible AS Bool;
+        UPDATE roads SET name = $name, description = $description, visible = $visible WHERE id = $id AND m = $m;
+    """
+    prepared_query = session.prepare(query)
+    return session.transaction().execute(
+        prepared_query,
+        {
+            '$id': str(id_param),
+            '$m': str(m_param),
+            '$name': str(name),
+            '$description': str(description),
+            '$visible': bool(visible)
+        },
+        commit_tx=True
+    )
+
+def get_route_meta(session, id_param, m_param):
+    """Получить метаданные маршрута (name, description, visible)"""
+    query = """
+        DECLARE $id AS Utf8;
+        DECLARE $m AS Utf8;
+        SELECT name, description, visible FROM roads WHERE id = $id AND m = $m;
+    """
+    prepared_query = session.prepare(query)
+    return session.transaction().execute(
+        prepared_query,
+        {'$id': str(id_param), '$m': str(m_param)},
+        commit_tx=True
+    )
+
 # --- Вспомогательные функции ---
 
 def create_response(status_code, body):
@@ -165,6 +202,39 @@ def handler(event, context):
                 raise
 
             return create_response(200, {'status': 'saved'})
+
+        # 5. Получение метаданных маршрута
+        elif action == 'get_meta':
+            if not m_val: return create_response(400, {'error': 'missing_route_name'})
+            result = pool.retry_operation_sync(get_route_meta, id_param=id_val, m_param=m_val)
+            if not result[0].rows:
+                return create_response(404, {'error': 'route_not_found'})
+            row = result[0].rows[0]
+            return create_response(200, {
+                'name': row.name if hasattr(row, 'name') else '',
+                'description': row.description if hasattr(row, 'description') else '',
+                'visible': row.visible if hasattr(row, 'visible') else False
+            })
+
+        # 6. Сохранение метаданных маршрута
+        elif action == 'save_meta':
+            if not m_val: return create_response(400, {'error': 'missing_route_name'})
+
+            try:
+                body_data = json.loads(body) if body else {}
+            except Exception as je:
+                return create_response(400, {'error': 'invalid_json_body', 'details': str(je)})
+
+            name = body_data.get('name', '')
+            description = body_data.get('description', '')
+            visible = body_data.get('visible', False)
+
+            try:
+                pool.retry_operation_sync(update_route_meta, id_param=id_val, m_param=m_val, name=name, description=description, visible=visible)
+            except Exception as se:
+                raise
+
+            return create_response(200, {'status': 'meta_saved'})
 
         else:
             return create_response(400, {'error': 'unknown_action'})

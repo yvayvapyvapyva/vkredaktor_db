@@ -830,6 +830,12 @@ function addP(coords, data = null, silent = false) {
         p.pts = coords.map(pt => [f6(pt[0]), f6(pt[1])]);
         p.lineOutline.geometry.setCoordinates(coords);
         if(p.lineAccent) p.lineAccent.geometry.setCoordinates(coords);
+        if(isDrawing && coords.length > 0) {
+            const pmCoords = p.pm.geometry.getCoordinates();
+            if(Math.abs(pmCoords[0] - coords[0][0]) > 0.000001 || Math.abs(pmCoords[1] - coords[0][1]) > 0.000001) {
+                p.pm.geometry.setCoordinates(coords[0]);
+            }
+        }
         if(isDrawing && p.pts.length > 1) { $('addText').textContent = "Завершить рисование пути"; }
         updI(p);
     });

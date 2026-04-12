@@ -84,13 +84,13 @@ body {
             .btn-add-main { font-size: 14px; padding: 14px 18px; }
         }
         .modal { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-        .modal-content { background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; display: flex; flex-direction: column; max-height: 90vh; animation: slideUp 0.4s cubic-bezier(0.2, 1, 0.3, 1); position: relative; padding-bottom: env(safe-area-inset-bottom); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(24px) saturate(130%); -webkit-backdrop-filter: blur(24px) saturate(130%); }
-        .settings-sheet .modal-content { max-width: 620px; width: min(100vw, 620px); height: min(90vh, 820px); max-height: min(90vh, 820px); border-radius: 26px 26px 0 0; margin-top: calc(env(safe-area-inset-top) + var(--vk-header-height) + 18px); }
+        .modal-content { background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); width: 100%; max-width: 500px; border-radius: 30px 30px 0 0; display: flex; flex-direction: column; max-height: 90vh; position: relative; padding-bottom: env(safe-area-inset-bottom); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(24px) saturate(130%); -webkit-backdrop-filter: blur(24px) saturate(130%); }
+        .settings-sheet .modal-content { max-width: none; width: 100vw; height: 100vh; max-height: none; border-radius: 0; margin-top: 0; }
         .settings-header { position: sticky; top: 0; z-index: 5; padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(18,18,22,0.85)); border-bottom: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .settings-header h3 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
         .settings-header .subtitle { display: none; }
         .btn-done { background: linear-gradient(180deg, rgba(25,25,30,0.8), rgba(15,15,18,0.7)); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; box-shadow: 0 6px 14px rgba(0,0,0,0.3); cursor: pointer; }
-        .settings-body { padding: 14px 14px 24px; overflow-y: auto; }
+        .settings-body { padding: 14px 14px 24px; overflow-y: auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
         .settings-section { margin-bottom: 18px; }
         .settings-note { font-size: 12px; color: #b8bcc7; margin: 8px 4px 0; }
         .route-search { margin-bottom: 10px; }
@@ -103,7 +103,6 @@ body {
         .selected-route-card .sub { color: #b8bcc7; font-size: 13px; margin-top: 4px; }
         .rename-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
         #renameRouteBtn { padding: 10px 12px; font-size: 13px; border-radius: 12px; white-space: nowrap; width: auto; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         .btn-action { background: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 16px; font-weight: 650; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; width: 100%; box-shadow: 0 12px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.18s, box-shadow 0.18s; }
         .btn-action:active { transform: scale(0.98); box-shadow: 0 8px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.16); }
@@ -119,6 +118,9 @@ body {
         .gist-list { max-height: 320px; overflow-y: auto; }
         .gist-item { padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); font-weight: 500; color: #e5e7eb; }
         .gist-item.active { color: #ffffff; background: rgba(255,255,255,0.12); }
+        .route-list-item { padding: 16px 20px; cursor: pointer; font-size: 16px; font-weight: 600; color: #ffffff; background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(20,20,25,0.85)); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+        .route-list-item:active { transform: scale(0.98); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .route-list-item.active { color: #ffffff; background: linear-gradient(180deg, rgba(0,122,255,0.4), rgba(0,90,200,0.35)); border-color: rgba(0,122,255,0.6); box-shadow: 0 0 0 2px rgba(0,122,255,0.3); }
         .color-dropdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(180deg, rgba(25,25,30,0.9), rgba(15,15,18,0.85)); border-radius: 30px; padding: 12px; display: none; flex-direction: column; gap: 4px; z-index: 6000; box-shadow: 0 30px 100px rgba(0,0,0,0.5); width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .dropdown-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 5999; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
         .color-row { display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 18px; cursor: pointer; }
@@ -184,7 +186,8 @@ body {
 <div id="listColorDropdown" class="color-dropdown"></div>
 
 <div id="pointsOrderModal" class="modal" onclick="if(event.target===this) toggleM('pointsOrderModal')"><div class="modal-content"><div class="modal-header"><h3 id="orderModalTitle">Маршрут</h3><button class="close-circle" onclick="toggleM('pointsOrderModal')">✕</button></div><div class="editor-section" id="pointsSortList"></div><div style="padding: 20px;"><button id="saveInListBtn" class="btn-action" onclick="handleModalSave()"><span id="saveBtnText">Готово</span></button></div></div></div>
-<div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><h3>Настройки</h3></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div class="settings-section"><select id="settingsRouteSelect" class="settings-route-select"><option value="">Выберите маршрут</option></select></div><div class="settings-section"><div class="input-wrapper" style="margin-bottom:8px;"><input type="text" id="newRouteName" placeholder="Название нового маршрута" style="width:100%; padding:14px; border:none; font-size:16px; outline:none; background:transparent; color:#f5f7fa; font-family:inherit; box-sizing:border-box;"></div><button id="btnCreateFile" class="settings-tool-btn settings-tool-btn-green" onclick="handleCreateNew()">➕ Создать новый маршрут</button></div><div id="fileActions" class="settings-section" style="display:none;"><div class="settings-tools"><button class="settings-tool-btn" onclick="renameActiveRoute()">✏️ Переименовать маршрут</button><button class="settings-tool-btn" onclick="shareActiveRoute()">🔗 Скопировать ссылку на маршрут</button><button class="settings-tool-btn settings-tool-btn-danger" onclick="deleteActiveRoute()">🗑️ Удалить маршрут</button></div></div></div></div></div>
+<div id="settingsModal" class="modal settings-sheet" onclick="if(event.target===this) toggleM('settingsModal')"><div class="modal-content"><div class="settings-header"><div style="flex:1; min-width:0;"><span id="settingsTitle">Ваши маршруты</span></div><button class="close-circle" onclick="toggleM('settingsModal')">✕</button></div><div class="editor-section settings-body"><div id="routesList"></div></div><button class="settings-tool-btn settings-tool-btn-green" onclick="openCreateRouteModal()" style="width:100%;flex-shrink:0;">➕ Создать новый маршрут</button></div></div>
+<div id="createRouteModal" class="modal" onclick="if(event.target===this) toggleM('createRouteModal')"><div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:400px;width:90%;padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(35,35,42,0.98), rgba(22,22,28,0.98));border:1px solid rgba(255,255,255,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.5);"><h3 style="margin:0 0 20px;font-size:22px;font-weight:700;text-align:center;">Новый маршрут</h3><div class="input-wrapper" style="margin-bottom:20px;padding:4px;border-radius:14px;"><input type="text" id="newRouteNameInput" placeholder="Название маршрута" style="width:100%;padding:14px;border:none;font-size:17px;outline:none;background:transparent;color:#f5f7fa;font-family:inherit;"></div><div style="display:flex;gap:12px;"><button class="btn-action" onclick="toggleM('createRouteModal')" style="flex:1;background:rgba(80,80,90,0.8);padding:16px;font-size:15px;font-weight:600;">Отмена</button><button class="btn-action" onclick="handleCreateNew()" style="flex:1;background:linear-gradient(180deg, rgba(52,199,89,0.9), rgba(40,160,70,0.85));padding:16px;font-size:15px;font-weight:600;">Создать</button></div></div></div>
 
 <script>
 (function (global) {
@@ -550,8 +553,6 @@ ymaps.ready(async () => {
     new Sortable($('pointsSortList'), { animation: 150, handle: '.sort-handle', ghostClass: 'sortable-ghost', onEnd: reorderPointsFromList });
 
     localStorage.removeItem('gh_t_optimized');
-    const settingsRouteSelect = $('settingsRouteSelect');
-    if (settingsRouteSelect) settingsRouteSelect.addEventListener('change', onSettingsRouteSelect);
     
     handleInitialAuth();
 });
@@ -609,7 +610,8 @@ const handleInitialAuth = async () => {
     await refreshFileList();
     const userId = window.USER_ID || USER_ID;
     const routeCount = settingsRouteFiles.length;
-    showToast(`${userId} - маршрутов: ${routeCount}`, 'success');
+    $('settingsTitle').textContent = `${userId} - маршрутов:${routeCount}`;
+    toggleM('settingsModal');
 };
 
 const refreshFileList = async () => {
@@ -627,16 +629,22 @@ const refreshFileList = async () => {
     }
 };
 const renderSettingsFileList = () => {
-    const sel = $('settingsRouteSelect');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">Выберите маршрут</option>';
-    settingsRouteFiles.forEach(routeName => {
-        const op = document.createElement('option');
-        op.value = routeName;
-        op.textContent = routeName;
-        sel.appendChild(op);
-    });
-    sel.value = curRoute || "";
+    const list = $('routesList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (settingsRouteFiles.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#8b8f99;font-size:15px;">У вас пока нет маршрутов.<br>Создайте первый маршрут.</div>';
+    } else {
+        settingsRouteFiles.forEach(routeName => {
+            const btn = document.createElement('div');
+            btn.className = 'route-list-item' + (routeName === curRoute ? ' active' : '');
+            btn.textContent = routeName;
+            btn.onclick = () => loadRoute(routeName);
+            list.appendChild(btn);
+        });
+    }
+    const userId = window.USER_ID || USER_ID;
+    $('settingsTitle').textContent = `${userId} - маршрутов:${settingsRouteFiles.length}`;
 };
 
 const updateVisibility = () => {
@@ -657,28 +665,26 @@ const updateVisibility = () => {
     updateSaveState();
 };
 
+const openCreateRouteModal = () => {
+    toggleM('createRouteModal');
+    $('newRouteNameInput').value = '';
+    setTimeout(() => $('newRouteNameInput').focus(), 100);
+};
+
 const handleCreateNew = async () => {
-    const n = $('newRouteName').value.trim();
+    const n = $('newRouteNameInput').value.trim();
     if(!n) return;
     
-    const btn = $('btnCreateFile');
-    btn.disabled = true;
-    btn.textContent = "...";
+    toggleM('createRouteModal');
+    toggleM('settingsModal');
     
     try {
         await callYcFunction('save', { m: n }, []);
-        $('newRouteName').value = '';
-        setTimeout(() => { 
-            refreshFileList(); 
-            loadRoute(n); 
-            btn.disabled = false; 
-            btn.textContent = "Создать"; 
-            showToast("Маршрут создан", 'success'); 
-        }, 1000);
+        refreshFileList(); 
+        loadRoute(n); 
+        showToast("Маршрут создан", 'success'); 
     } catch (e) {
         console.error('Error creating route:', e);
-        btn.disabled = false;
-        btn.textContent = "Создать";
         showToast("Ошибка создания", 'error');
     }
 };
@@ -700,6 +706,7 @@ const loadRoute = async (routeName) => {
         lastSavedSnapshot = serializePoints();
         updateVisibility();
         setActivePoint(points[0] || null);
+        toggleM('settingsModal');
         showToast(`Загружен: ${routeName}`, 'success');
     } catch (e) {
         console.error('Error loading route:', e);
@@ -1102,6 +1109,7 @@ window.deleteActiveRoute = deleteActiveRoute;
 window.launchNavigatorWithCurrentRoute = launchNavigatorWithCurrentRoute;
 window.saveRouteLocally = saveRouteLocally;
 window.handleCreateNew = handleCreateNew;
+window.openCreateRouteModal = openCreateRouteModal;
 </script>
 </body>
 </html>

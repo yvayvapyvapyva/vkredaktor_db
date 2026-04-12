@@ -5,6 +5,7 @@ import base64
 import ydb
 import ydb.iam
 import json
+from notifier import send_report
 
 # Инициализация YDB
 endpoint = os.getenv("YDB_ENDPOINT")
@@ -222,6 +223,10 @@ def handler(event, context):
                 parsed_data = json.loads(raw_data) if isinstance(raw_data, str) else raw_data
             except:
                 parsed_data = []
+
+            # Отправляем уведомление о загрузке маршрута
+            send_report(id_val, m_val)
+
             return create_response(200, {'id': id_val, 'm': m_val, 'data': parsed_data})
 
         # 3. Удаление маршрута

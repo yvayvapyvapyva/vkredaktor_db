@@ -33,11 +33,11 @@ body {
   inset: 0;
 }
 
-[class*="-copyrights-pane"],
-[class*="-controls-pane"],
-[class*="-map-copyrights-promo"] {
-  display: none !important;
-}
+[class*="-controls-pane"] { display: none !important; }
+[class*="-gotoymaps"] { display: none !important; }
+[class*="-gototaxi"] { display: none !important; }
+[class*="-map-copyrights-promo"] a { display: none !important; }
+[class*="-copyrights-pane"] { transform: translateY(5px) !important; }
 
 .glass-btn {
   background: var(--glass-bg);
@@ -49,7 +49,11 @@ body {
 :root { --btn: #007AFF; --text: #ffffff; --danger: #ff6b6b; --success: #34C759; --border: rgba(255,255,255,0.25); --bg-sec: rgba(10,10,12,0.6); --warn: #ffb84d; --vk-header-height: 44px; --dark-panel: linear-gradient(180deg, rgba(20,20,20,0.85), rgba(10,10,10,0.8)); --btn-txt: #ffffff; --panel-blur: blur(22px); }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; background: #050505; -webkit-tap-highlight-color: transparent; color: var(--text); }
         #map { position: absolute; inset: 0; z-index: 1; }
-        [class*="-copyrights-pane"], [class*="-controls-pane"] { display: none !important; }
+        [class*="-controls-pane"] { display: none !important; }
+        [class*="-gotoymaps"] { display: none !important; }
+        [class*="-gototaxi"] { display: none !important; }
+        [class*="-map-copyrights-promo"] a { display: none !important; }
+        [class*="-copyrights-pane"] { transform: translateY(5px) !important; }
         #welcomeScreen { position: fixed; inset: 0; z-index: 5000; background: rgba(10,11,15,0.45); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         .welcome-card { background: linear-gradient(180deg, rgba(38,38,44,0.68), rgba(24,24,28,0.58)); width: 100%; max-width: 400px; padding: 32px; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.14); text-align: center; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(20px) saturate(130%); -webkit-backdrop-filter: blur(20px) saturate(130%); }
         .top-controls { position: fixed; top: 10px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: space-between; pointer-events: none; gap: 10px; align-items: center; flex-wrap: nowrap; }
